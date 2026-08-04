@@ -1,7 +1,7 @@
 import React from 'react';
 import {FlatList, View} from 'react-native';
 import CardBase from '@/components/shared/CardBase';
-import {appColors} from '@/constants/Colors';
+import {appColors} from '@/lib/constants/Colors';
 import {Paragraph} from '@/components/shared/Paragraph';
 import Rating from '@/components/shared/Rating';
 

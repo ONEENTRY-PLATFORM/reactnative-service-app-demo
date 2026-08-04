@@ -1,4 +1,4 @@
-import React, {forwardRef, FunctionComponent, useState} from 'react';
+import React, {ReactNode, RefObject} from 'react';
 import {
   TextInput,
   TouchableOpacity,
@@ -7,113 +7,90 @@ import {
   TextInputProps,
 } from 'react-native';
 import {Paragraph, ParagraphProps} from '@/components/shared/Paragraph';
-import {appColors} from '@/constants/Colors';
-import {validationMethods} from '@/lib/validationMethods';
-import AlertSVG from '@/assets/icons/Alert.svg';
+import {appColors} from '@/lib/constants/Colors';
+import CustomImage from '@/components/shared/CustomImage';
+
+export const InputErrorMessage = ({
+  errorMessage,
+  errorParagraphProps,
+}: {
+  errorMessage?: string;
+  errorParagraphProps?: ParagraphProps;
+}) => {
+  return (
+    <View style={styles.errorContainer}>
+      <CustomImage
+        height={15}
+        width={15}
+        contentFit={'contain'}
+        uri={require('../../assets/icons/Alert.svg')}
+      />
+      <Paragraph size={12} color={'red'} {...errorParagraphProps}>
+        {errorMessage}
+      </Paragraph>
+    </View>
+  );
+};
 
 type Props = {
   title?: string;
   onPressIcon?: () => void;
-  Icon?: FunctionComponent;
-  validators?: Record<string, any>;
-  value: InputValue;
-  setValue: (value: InputValue) => void;
-  errorParagraphProps?: ParagraphProps;
+  Icon?: ReactNode;
   errorMessage?: string;
-} & Omit<TextInputProps, 'value'>;
+  type?: 'normal' | 'compact';
+  ref?: RefObject<TextInput | null>;
+  width?: number;
+} & TextInputProps;
 
-const CustomInput = forwardRef<TextInput, Props>(
-  (
-    {
-      title,
-      Icon,
-      validators,
-      value,
-      setValue,
-      onPressIcon,
-      errorParagraphProps,
-      errorMessage,
-      ...rest
-    },
-    ref,
-  ) => {
-    const [isFocused, setIsFocused] = useState<boolean>(false);
-    const {style, ...other} = rest;
+const CustomInput: React.FC<Props> = ({
+  title,
+  onPressIcon,
+  Icon,
+  ref,
+  errorMessage,
+  type = 'normal',
+  style,
+  width,
+  ...other
+}) => {
+  const {value, onChangeText} = other;
+  const isFocused = ref?.current?.isFocused();
 
-    const onChange = (val: string) => {
-      let valid = true;
-      if (validators) {
-        valid = Object.keys(validators)?.reduce(
-          (isValid, validator: string): boolean => {
-            if (!val) {
-              return false;
-            }
-            // @ts-ignore
-            const validatorFunc = validationMethods[validator];
-            const result = validatorFunc
-              ? validatorFunc(val, validators[validator])
-              : true;
+  return (
+    <View style={{width}} className={'gap-y-1.5'}>
+      {title && (
+        <Paragraph size={14} weight={'300'}>
+          {title}
+        </Paragraph>
+      )}
+      <View className={'flex-row justify-between items-center'}>
+        <TextInput
+          style={[
+            styles.input,
+            style,
+            errorMessage ? styles.invalidValue : styles.validStyles,
+            isFocused && styles.focusedStyles,
+            other.multiline && styles.multilineInputStyle,
+          ]}
+          placeholderTextColor={appColors.gray}
+          ref={ref}
+          {...other}
+        />
 
-            console.log(result);
-
-            if (isValid) {
-              return result;
-            } else {
-              return false;
-            }
-          },
-          true,
-        );
-      }
-
-      setValue({value: val, valid});
-    };
-
-    return (
-      <View className={'gap-y-1.5'}>
-        {title && (
-          <Paragraph size={20} weight={'400'} color={'gray'}>
-            {title}
-          </Paragraph>
-        )}
-        <View className={'flex-row justify-between items-center'}>
-          <TextInput
-            style={[
-              style,
-              styles.input,
-              !value.valid ? styles.invalidValue : styles.validStyles,
-              isFocused && styles.focusedStyles,
-            ]}
-            value={value.value}
-            placeholderTextColor={appColors.gray}
-            onChangeText={onChange}
-            onFocus={() => setIsFocused(true)}
-            onBlur={() => setIsFocused(false)}
-            ref={ref}
-            {...other}
-          />
-
-          {Icon && (
-            <TouchableOpacity
-              onPress={onPressIcon}
-              className={'absolute right-0 h-full justify-center'}>
-              <Icon />
-            </TouchableOpacity>
-          )}
-        </View>
-
-        {!value.valid && (
-          <View style={styles.errorContainer}>
-            <AlertSVG />
-            <Paragraph size={12} color={'red'} {...errorParagraphProps}>
-              {errorMessage}
-            </Paragraph>
-          </View>
+        {Icon && (
+          <TouchableOpacity
+            onPress={onPressIcon}
+            className={'absolute right-0 h-full justify-center'}>
+            {Icon}
+          </TouchableOpacity>
         )}
       </View>
-    );
-  },
-);
+      {errorMessage && <InputErrorMessage errorMessage={errorMessage} />}
+    </View>
+  );
+};
+
+export default CustomInput;
 
 const styles = StyleSheet.create({
   invalidValue: {
@@ -130,6 +107,12 @@ const styles = StyleSheet.create({
     fontWeight: '400',
     lineHeight: 22,
   },
+  multilineInputStyle: {
+    marginTop: 3,
+    height: 186,
+    paddingTop: 10,
+    paddingBottom: 10,
+  },
   validStyles: {
     borderColor: appColors.green,
   },
@@ -142,5 +125,3 @@ const styles = StyleSheet.create({
     gap: 5,
   },
 });
-
-export default CustomInput;

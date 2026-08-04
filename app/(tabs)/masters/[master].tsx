@@ -12,10 +12,10 @@ import MasterPortfolio from '@/components/content/MasterScreen/MasterPortfolio';
 type Props = {};
 
 const MasterScreen: React.FC<Props> = ({}) => {
-  const res = useLocalSearchParams();
+  const params = useLocalSearchParams();
   const master = useAppSelector(state =>
     // @ts-ignore
-    getMasterById(state, parseInt(res?.master)),
+    getMasterById(state, parseInt(params?.master)),
   );
 
   const portfolioIds = useMemo(() => {
@@ -37,15 +37,31 @@ const MasterScreen: React.FC<Props> = ({}) => {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{gap: 18}}>
         <MasterPortfolioCard
-          role={res.role as string}
+          role={params.role as string}
           id={master?.id}
-          master={master?.attributeValues}
+          master={master}
         />
-        {master?.attributeValues?.master_description?.value[0]?.plainValue && (
-          <Paragraph size={12} color={'gray'}>
-            {master?.attributeValues?.master_description?.value[0]?.plainValue}
-          </Paragraph>
-        )}
+        {(() => {
+          // CMS rich-text attribute exposes both plainValue and htmlValue. Some
+          // records carry only the HTML variant, so fall back to it (tags
+          // stripped) — mirrors nextjs-beauty's MasterDescription.
+          const descEntry: any =
+            master?.attributeValues?.master_description?.value?.[0];
+          const text =
+            (descEntry?.plainValue as string | undefined) ||
+            (typeof descEntry?.htmlValue === 'string'
+              ? descEntry.htmlValue
+                  .replace(/<br\s*\/?>/gi, '\n')
+                  .replace(/<[^>]+>/g, '')
+                  .replace(/&nbsp;/g, ' ')
+                  .trim()
+              : '');
+          return text ? (
+            <Paragraph size={13} color={'ink'} style={{lineHeight: 20}}>
+              {text}
+            </Paragraph>
+          ) : null;
+        })()}
 
         <MasterSalonsList
           salons={master?.attributeValues?.master_salon?.value}

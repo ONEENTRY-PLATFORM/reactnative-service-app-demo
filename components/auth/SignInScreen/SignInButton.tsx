@@ -22,7 +22,7 @@ const SignInButton: React.FC<Props> = ({login, password}) => {
       <Redirect
         // @ts-ignore
         href={
-          lastVisitedTab ? `/(tabs)/${lastVisitedTab}` : '/(tabs)/home_mobile'
+          lastVisitedTab ? `/(tabs)/${lastVisitedTab}` : '/(tabs)/home'
         }
       />
     );

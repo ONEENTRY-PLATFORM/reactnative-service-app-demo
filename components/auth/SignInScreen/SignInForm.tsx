@@ -1,19 +1,19 @@
-import React, {Dispatch, useRef} from 'react';
-import {TextInput, View} from 'react-native';
+import React, { Dispatch, useRef } from 'react';
+import { TextInput, View } from 'react-native';
 import CustomInput from '@/components/shared/CustomInput';
 import PasswordInput from '@/components/shared/PasswordInput';
-import {Paragraph} from '@/components/shared/Paragraph';
-import {useAppSelector} from '@/state/hooks';
+import { Paragraph } from '@/components/shared/Paragraph';
+import { useAppSelector } from '@/state/hooks';
 
 type Props = {
-  login: InputValue;
-  setLogin: Dispatch<any>;
-  pass: InputValue;
-  setPass: Dispatch<any>;
+  login: string;
+  setLogin: Dispatch<string>;
+  pass: string;
+  setPass: Dispatch<string>;
 };
 
-const SignInForm: React.FC<Props> = ({login, setLogin, setPass, pass}) => {
-  const {sign_in_text} = useAppSelector(
+const SignInForm: React.FC<Props> = ({ login, setLogin, setPass, pass }) => {
+  const { sign_in_text } = useAppSelector(
     state => state.SystemContentReducer.content,
   );
   const passRef = useRef<TextInput>(null);
@@ -30,10 +30,16 @@ const SignInForm: React.FC<Props> = ({login, setLogin, setPass, pass}) => {
         keyboardType={'email-address'}
         autoCapitalize={'none'}
         value={login}
-        setValue={setLogin}
+        onChangeText={setLogin}
         onSubmitEditing={() => passRef?.current?.focus()}
       />
-      <PasswordInput ref={passRef} value={pass} setValue={setPass} />
+      <CustomInput
+        ref={passRef}
+        value={pass}
+        onChangeText={setPass}
+        title={'Password'}
+        secureTextEntry
+      />
     </View>
   );
 };

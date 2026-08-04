@@ -12,10 +12,25 @@ expo-env.d.ts
 # Native
 *.orig.*
 *.jks
+*.keystore
 *.p8
 *.p12
 *.key
 *.mobileprovision
+GoogleService-Info.plist
+google-services.json
+
+# EAS credentials
+credentials.json
+credentials/
+eas.json
+
+# Build artifacts
+build-*.aab
+build-*.ipa
+*.apk
+*.aab
+*.ipa
 
 # Metro
 .metro-health-check*
@@ -35,9 +50,11 @@ yarn-error.*
 # typescript
 *.tsbuildinfo
 /.yarn/
+.pnp.cjs
+.pnp.loader.mjs
 
+# Native projects (regenerate via `npx expo prebuild`)
 ios/
 android/
 
 .idea
-

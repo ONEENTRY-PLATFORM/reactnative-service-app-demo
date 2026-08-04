@@ -9,15 +9,18 @@ type Props = {};
 const MastersList: React.FC<Props> = ({}) => {
   const service = useAppSelector(state => state.OrderReducer.service);
   const masters = useAppSelector(state => state.MastersReducer.masters);
-  const salon = useAppSelector(state => state.SalonsReducer.selectedSalon);
+  const salon = useAppSelector(state => state.OrderReducer.salon);
   const categories = useAppSelector(
     state => state.CatalogCategoriesReducer.categories,
+  );
+  const {master_not_text, select_salon_text} = useAppSelector(
+    state => state.SystemContentReducer.content,
   );
 
   const {qualifiedMasters, services} = useMemo(() => {
     const services: number[] = [];
     let qualifiedMasters = masters.filter(master => {
-      const isService = master?.attributeValues?.services?.value.some(
+      const isService = master?.attributeValues?.master_services?.value?.some(
         (value: Record<any, any>) => {
           const qualified = service?.localizeInfos?.title === value?.title;
           if (qualified) {
@@ -42,16 +45,20 @@ const MastersList: React.FC<Props> = ({}) => {
     return {qualifiedMasters, services};
   }, [masters, service, salon]);
 
-  if (!salon) {
+  const renderParagraph = ({text}: {text: string}) => {
     return (
       <Paragraph
         className={'text-center'}
         color={'gray'}
         size={20}
         weight={'600'}>
-        Select salon first
+        {text}
       </Paragraph>
     );
+  };
+
+  if (!salon) {
+    return renderParagraph({text: select_salon_text || ''});
   }
 
   return (
@@ -61,6 +68,7 @@ const MastersList: React.FC<Props> = ({}) => {
       showsVerticalScrollIndicator={false}
       contentContainerStyle={{gap: 20}}
       className={'mt-4'}
+      ListEmptyComponent={() => renderParagraph({text: master_not_text})}
       renderItem={({item, index}) => (
         <MasterInMastersCard
           role={

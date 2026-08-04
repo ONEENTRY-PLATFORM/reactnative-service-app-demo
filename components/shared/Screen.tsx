@@ -1,7 +1,7 @@
 import {View, ViewProps, ViewStyle} from 'react-native';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
-import {layoutHeight, layoutPadding} from '@/constants/sizes';
-import {appColors} from '@/constants/Colors';
+import {layoutHeight, layoutPadding} from '@/lib/constants/sizes';
+import {appColors} from '@/lib/constants/Colors';
 
 export type Edge = 'top' | 'bottom' | 'horizontal' | 'header';
 
@@ -27,10 +27,8 @@ export const Screen = (props: ScreenProps) => {
   };
 
   return (
-    <View>
-      <View style={[styles, style]} {...rest}>
-        {children}
-      </View>
+    <View style={[styles, style]} {...rest}>
+      {children}
     </View>
   );
 };

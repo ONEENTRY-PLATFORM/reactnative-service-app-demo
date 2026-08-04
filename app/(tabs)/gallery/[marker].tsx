@@ -1,6 +1,6 @@
 import React, {useEffect, useMemo} from 'react';
 import {Screen} from '@/components/shared/Screen';
-import {useLocalSearchParams, useNavigation} from 'expo-router';
+import {router, useLocalSearchParams, useNavigation} from 'expo-router';
 import GalleryCategoryList from '@/components/content/GalleryCategoryScreen/GalleryCategoryList';
 
 type Props = {};

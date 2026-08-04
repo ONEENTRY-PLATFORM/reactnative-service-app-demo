@@ -1,0 +1,210 @@
+diff --git a/node_modules/@react-native-firebase/messaging/ios/RNFBMessaging/RNFBMessaging+AppDelegate.h b/node_modules/@react-native-firebase/messaging/ios/RNFBMessaging/RNFBMessaging+AppDelegate.h
+index 708ff24..f17b19c 100644
+--- a/node_modules/@react-native-firebase/messaging/ios/RNFBMessaging/RNFBMessaging+AppDelegate.h
++++ b/node_modules/@react-native-firebase/messaging/ios/RNFBMessaging/RNFBMessaging+AppDelegate.h
+@@ -16,7 +16,7 @@
+  */
+ 
+ #import <Foundation/Foundation.h>
+-#import <React/RCTBridgeModule.h>
++@import React;
+ #import <UIKit/UIKit.h>
+ 
+ NS_ASSUME_NONNULL_BEGIN
+diff --git a/node_modules/@react-native-firebase/messaging/ios/RNFBMessaging/RNFBMessaging+AppDelegate.m b/node_modules/@react-native-firebase/messaging/ios/RNFBMessaging/RNFBMessaging+AppDelegate.m
+index 9c3651d..4eb430c 100644
+--- a/node_modules/@react-native-firebase/messaging/ios/RNFBMessaging/RNFBMessaging+AppDelegate.m
++++ b/node_modules/@react-native-firebase/messaging/ios/RNFBMessaging/RNFBMessaging+AppDelegate.m
+@@ -21,7 +21,7 @@
+ 
+ #import <RNFBApp/RNFBRCTEventEmitter.h>
+ #import <RNFBApp/RNFBSharedUtils.h>
+-#import <React/RCTConvert.h>
++@import React;
+ 
+ #import "RNFBMessaging+AppDelegate.h"
+ #import "RNFBMessagingSerializer.h"
+diff --git a/node_modules/@react-native-firebase/messaging/ios/RNFBMessaging/RNFBMessaging+NSNotificationCenter.m b/node_modules/@react-native-firebase/messaging/ios/RNFBMessaging/RNFBMessaging+NSNotificationCenter.m
+index 1867f14..206233b 100644
+--- a/node_modules/@react-native-firebase/messaging/ios/RNFBMessaging/RNFBMessaging+NSNotificationCenter.m
++++ b/node_modules/@react-native-firebase/messaging/ios/RNFBMessaging/RNFBMessaging+NSNotificationCenter.m
+@@ -17,8 +17,8 @@
+ #import <Firebase/Firebase.h>
+ #import <RNFBApp/RNFBJSON.h>
+ #import <RNFBApp/RNFBRCTEventEmitter.h>
+-#import <React/RCTConvert.h>
+-#import <React/RCTRootView.h>
++@import React;
++@import React;
+ 
+ #import "RNFBMessaging+AppDelegate.h"
+ #import "RNFBMessaging+FIRMessagingDelegate.h"
+diff --git a/node_modules/@react-native-firebase/messaging/ios/RNFBMessaging/RNFBMessagingModule.h b/node_modules/@react-native-firebase/messaging/ios/RNFBMessaging/RNFBMessagingModule.h
+index 0a1c716..f1ddff8 100644
+--- a/node_modules/@react-native-firebase/messaging/ios/RNFBMessaging/RNFBMessagingModule.h
++++ b/node_modules/@react-native-firebase/messaging/ios/RNFBMessaging/RNFBMessagingModule.h
+@@ -16,7 +16,7 @@
+  */
+ 
+ #import <Foundation/Foundation.h>
+-#import <React/RCTBridgeModule.h>
++@import React;
+ 
+ @interface RNFBMessagingModule : NSObject <RCTBridgeModule>
+ + (NSDictionary *_Nonnull)addCustomPropsToUserProps:(NSDictionary *_Nullable)userProps
+diff --git a/node_modules/@react-native-firebase/messaging/ios/RNFBMessaging/RNFBMessagingModule.m b/node_modules/@react-native-firebase/messaging/ios/RNFBMessaging/RNFBMessagingModule.m
+index 657ac96..798c010 100644
+--- a/node_modules/@react-native-firebase/messaging/ios/RNFBMessaging/RNFBMessagingModule.m
++++ b/node_modules/@react-native-firebase/messaging/ios/RNFBMessaging/RNFBMessagingModule.m
+@@ -17,8 +17,8 @@
+ 
+ #import <Firebase/Firebase.h>
+ #import <RNFBApp/RNFBSharedUtils.h>
+-#import <React/RCTConvert.h>
+-#import <React/RCTUtils.h>
++@import React;
++@import React;
+ 
+ #import "RNFBMessaging+AppDelegate.h"
+ #import "RNFBMessaging+NSNotificationCenter.h"
+@@ -82,21 +82,18 @@ - (NSDictionary *)constantsToExport {
+ #pragma mark -
+ #pragma mark Firebase Messaging Methods
+ 
+-RCT_EXPORT_METHOD(getInitialNotification
+-                  : (RCTPromiseResolveBlock)resolve
++RCT_EXPORT_METHOD(getInitialNotification : (RCTPromiseResolveBlock)resolve
+                   : (RCTPromiseRejectBlock)reject) {
+   resolve([[RNFBMessagingUNUserNotificationCenter sharedInstance] getInitialNotification]);
+ }
+ 
+-RCT_EXPORT_METHOD(getDidOpenSettingsForNotification
+-                  : (RCTPromiseResolveBlock)resolve
++RCT_EXPORT_METHOD(getDidOpenSettingsForNotification : (RCTPromiseResolveBlock)resolve
+                   : (RCTPromiseRejectBlock)reject) {
+   resolve(
+       [[RNFBMessagingUNUserNotificationCenter sharedInstance] getDidOpenSettingsForNotification]);
+ }
+ 
+-RCT_EXPORT_METHOD(setAutoInitEnabled
+-                  : (BOOL)enabled
++RCT_EXPORT_METHOD(setAutoInitEnabled : (BOOL)enabled
+                   : (RCTPromiseResolveBlock)resolve
+                   : (RCTPromiseRejectBlock)reject) {
+   @try {
+@@ -117,8 +114,7 @@ - (NSDictionary *)constantsToExport {
+   }
+ }
+ 
+-RCT_EXPORT_METHOD(getToken
+-                  : (NSString *)appName
++RCT_EXPORT_METHOD(getToken : (NSString *)appName
+                   : (NSString *)senderId
+                   : (RCTPromiseResolveBlock)resolve
+                   : (RCTPromiseRejectBlock)reject) {
+@@ -153,8 +149,7 @@ - (NSDictionary *)constantsToExport {
+                        }];
+ }
+ 
+-RCT_EXPORT_METHOD(deleteToken
+-                  : (NSString *)appName
++RCT_EXPORT_METHOD(deleteToken : (NSString *)appName
+                   : (NSString *)senderId
+                   : (RCTPromiseResolveBlock)resolve
+                   : (RCTPromiseRejectBlock)reject) {
+@@ -201,8 +196,7 @@ - (NSDictionary *)constantsToExport {
+   }
+ }
+ 
+-RCT_EXPORT_METHOD(setAPNSToken
+-                  : (NSString *)token
++RCT_EXPORT_METHOD(setAPNSToken : (NSString *)token
+                   : (NSString *)type
+                   : (RCTPromiseResolveBlock)resolve
+                   : (RCTPromiseRejectBlock)reject) {
+@@ -241,8 +235,7 @@ - (NSDictionary *)constantsToExport {
+   };
+ }
+ 
+-RCT_EXPORT_METHOD(requestPermission
+-                  : (NSDictionary *)permissions
++RCT_EXPORT_METHOD(requestPermission : (NSDictionary *)permissions
+                   : (RCTPromiseResolveBlock)resolve
+                   : (RCTPromiseRejectBlock)reject) {
+   if (RCTRunningInAppExtension()) {
+@@ -309,8 +302,7 @@ - (NSDictionary *)constantsToExport {
+                         }];
+ }
+ 
+-RCT_EXPORT_METHOD(registerForRemoteNotifications
+-                  : (RCTPromiseResolveBlock)resolve
++RCT_EXPORT_METHOD(registerForRemoteNotifications : (RCTPromiseResolveBlock)resolve
+                   : (RCTPromiseRejectBlock)reject) {
+ #if TARGET_IPHONE_SIMULATOR
+ #if !TARGET_CPU_ARM64
+@@ -363,8 +355,7 @@ - (NSDictionary *)constantsToExport {
+   });
+ }
+ 
+-RCT_EXPORT_METHOD(unregisterForRemoteNotifications
+-                  : (RCTPromiseResolveBlock)resolve
++RCT_EXPORT_METHOD(unregisterForRemoteNotifications : (RCTPromiseResolveBlock)resolve
+                   : (RCTPromiseRejectBlock)reject) {
+   [[UIApplication sharedApplication] unregisterForRemoteNotifications];
+   resolve(nil);
+@@ -394,8 +385,7 @@ - (NSDictionary *)constantsToExport {
+       }];
+ }
+ 
+-RCT_EXPORT_METHOD(subscribeToTopic
+-                  : (NSString *)topic
++RCT_EXPORT_METHOD(subscribeToTopic : (NSString *)topic
+                   : (RCTPromiseResolveBlock)resolve
+                   : (RCTPromiseRejectBlock)reject) {
+   [[FIRMessaging messaging] subscribeToTopic:topic
+@@ -408,8 +398,7 @@ - (NSDictionary *)constantsToExport {
+                                   }];
+ }
+ 
+-RCT_EXPORT_METHOD(unsubscribeFromTopic
+-                  : (NSString *)topic
++RCT_EXPORT_METHOD(unsubscribeFromTopic : (NSString *)topic
+                   : (RCTPromiseResolveBlock)resolve
+                   : (RCTPromiseRejectBlock)reject) {
+   [[FIRMessaging messaging] unsubscribeFromTopic:topic
+@@ -423,8 +412,7 @@ - (NSDictionary *)constantsToExport {
+                                       }];
+ }
+ 
+-RCT_EXPORT_METHOD(setDeliveryMetricsExportToBigQuery
+-                  : (BOOL)enabled
++RCT_EXPORT_METHOD(setDeliveryMetricsExportToBigQuery : (BOOL)enabled
+                   : (RCTPromiseResolveBlock)resolve
+                   : (RCTPromiseRejectBlock)reject) {
+   @try {
+diff --git a/node_modules/@react-native-firebase/messaging/ios/RNFBMessaging/RNFBMessagingSerializer.h b/node_modules/@react-native-firebase/messaging/ios/RNFBMessaging/RNFBMessagingSerializer.h
+index 502da9a..cfc3d41 100644
+--- a/node_modules/@react-native-firebase/messaging/ios/RNFBMessaging/RNFBMessagingSerializer.h
++++ b/node_modules/@react-native-firebase/messaging/ios/RNFBMessaging/RNFBMessagingSerializer.h
+@@ -17,7 +17,7 @@
+ 
+ #import <Firebase/Firebase.h>
+ #import <Foundation/Foundation.h>
+-#import <React/RCTBridgeModule.h>
++@import React;
+ 
+ @interface RNFBMessagingSerializer : NSObject
+ 
+diff --git a/node_modules/@react-native-firebase/messaging/ios/RNFBMessaging/RNFBMessagingSerializer.m b/node_modules/@react-native-firebase/messaging/ios/RNFBMessaging/RNFBMessagingSerializer.m
+index 7d75995..cfe2790 100644
+--- a/node_modules/@react-native-firebase/messaging/ios/RNFBMessaging/RNFBMessagingSerializer.m
++++ b/node_modules/@react-native-firebase/messaging/ios/RNFBMessaging/RNFBMessagingSerializer.m
+@@ -16,7 +16,7 @@
+  */
+ 
+ #import "RNFBMessagingSerializer.h"
+-#import <React/RCTConvert.h>
++@import React;
+ 
+ @implementation RNFBMessagingSerializer
+ 

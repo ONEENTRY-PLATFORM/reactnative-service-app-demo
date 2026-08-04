@@ -13,6 +13,7 @@ const MasterPicker: React.FC<Props> = ({}) => {
   return (
     <CustomButton
       title={current_master_text}
+      className={'mt-2'}
       onPress={() => router.navigate('/(tabs)/masters')}
     />
   );

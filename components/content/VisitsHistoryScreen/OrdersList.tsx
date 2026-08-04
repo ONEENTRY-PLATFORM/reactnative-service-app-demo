@@ -1,4 +1,4 @@
-import React, {useMemo} from 'react';
+import React, {useCallback, useMemo} from 'react';
 import {IOrderByMarkerEntity} from 'oneentry/dist/orders/ordersInterfaces';
 import {useGetUserOrdersQuery} from '@/api';
 import {FlatList} from 'react-native';
@@ -9,6 +9,7 @@ import {useAppSelector} from '@/state/hooks';
 import {router, useFocusEffect} from 'expo-router';
 import {useAuth} from '@/state/contexts/AuthContext';
 import {Paragraph} from '@/components/shared/Paragraph';
+import useOrderSocket from '@/lib/useOrderSocket';
 
 type Props = {
   category: number;
@@ -20,6 +21,7 @@ const OrdersList: React.FC<Props> = ({category}) => {
   const {first_order_text} = useAppSelector(
     state => state.SystemContentReducer.content,
   );
+  useOrderSocket({refetch});
 
   const sorted = useMemo(() => {
     const sortedOrders: Record<any, IOrderByMarkerEntity[]> = {
@@ -49,9 +51,11 @@ const OrdersList: React.FC<Props> = ({category}) => {
     return sortedOrders;
   }, [data]);
 
-  useFocusEffect(() => {
-    refetch();
-  });
+  useFocusEffect(
+    useCallback(() => {
+      refetch();
+    }, []),
+  );
 
   const keys = Object.keys(sorted);
 
@@ -78,7 +82,7 @@ const OrdersList: React.FC<Props> = ({category}) => {
       }
       data={sorted[keys[category]]}
       renderItem={({item}) => (
-        <UpcomingOrderCard item={item} category={category} />
+        <UpcomingOrderCard refetch={refetch} item={item} category={category} />
       )}
     />
   );

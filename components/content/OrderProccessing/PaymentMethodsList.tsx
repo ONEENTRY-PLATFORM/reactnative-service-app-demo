@@ -6,7 +6,7 @@ import {IAccountsEntity} from 'oneentry/dist/payments/paymentsInterfaces';
 import Select from '@/components/shared/Select';
 import {selectPaymentMethodForOrder} from '@/state/reducers/OrderSlice';
 import {Paragraph} from '@/components/shared/Paragraph';
-import {appColors} from '@/constants/Colors';
+import {appColors} from '@/lib/constants/Colors';
 import Card from '@/assets/icons/Card.svg';
 
 type MethodProps = {
@@ -51,7 +51,6 @@ const PaymentMethodsList: React.FC<Props> = ({}) => {
   const whitelistMethods = useMemo(() => {
     if (data) {
       return data.filter(method => {
-        console.log(method);
         // const index = paymentMethods?.findIndex(
         //   whitelistMethod => method.identifier === whitelistMethod.identifier,
         // );

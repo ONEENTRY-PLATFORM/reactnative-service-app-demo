@@ -1,0 +1,211 @@
+diff --git a/node_modules/@react-native-firebase/app/ios/RNFBApp/RCTConvert+FIRApp.h b/node_modules/@react-native-firebase/app/ios/RNFBApp/RCTConvert+FIRApp.h
+index 73c0982..69d9120 100644
+--- a/node_modules/@react-native-firebase/app/ios/RNFBApp/RCTConvert+FIRApp.h
++++ b/node_modules/@react-native-firebase/app/ios/RNFBApp/RCTConvert+FIRApp.h
+@@ -16,7 +16,7 @@
+  */
+ 
+ #import <FirebaseCore/FirebaseCore.h>
+-#import <React/RCTConvert.h>
++@import React;
+ 
+ @interface RCTConvert (FIRApp)
+ + (FIRApp *)firAppFromString:(NSString *)appName;
+diff --git a/node_modules/@react-native-firebase/app/ios/RNFBApp/RCTConvert+FIROptions.h b/node_modules/@react-native-firebase/app/ios/RNFBApp/RCTConvert+FIROptions.h
+index 470ac35..7629a7a 100644
+--- a/node_modules/@react-native-firebase/app/ios/RNFBApp/RCTConvert+FIROptions.h
++++ b/node_modules/@react-native-firebase/app/ios/RNFBApp/RCTConvert+FIROptions.h
+@@ -16,7 +16,7 @@
+  */
+ 
+ #import <FirebaseCore/FirebaseCore.h>
+-#import <React/RCTConvert.h>
++@import React;
+ 
+ @interface RCTConvert (FIROptions)
+ + (FIROptions *)convertRawOptions:(NSDictionary *)rawOptions;
+diff --git a/node_modules/@react-native-firebase/app/ios/RNFBApp/RNFBAppModule.h b/node_modules/@react-native-firebase/app/ios/RNFBApp/RNFBAppModule.h
+index 894c019..8555999 100644
+--- a/node_modules/@react-native-firebase/app/ios/RNFBApp/RNFBAppModule.h
++++ b/node_modules/@react-native-firebase/app/ios/RNFBApp/RNFBAppModule.h
+@@ -17,7 +17,7 @@
+ 
+ #import <Foundation/Foundation.h>
+ 
+-#import <React/RCTBridgeModule.h>
++@import React;
+ 
+ @interface RNFBAppModule : NSObject <RCTBridgeModule>
+ 
+diff --git a/node_modules/@react-native-firebase/app/ios/RNFBApp/RNFBAppModule.m b/node_modules/@react-native-firebase/app/ios/RNFBApp/RNFBAppModule.m
+index f679daa..a0c0bd6 100644
+--- a/node_modules/@react-native-firebase/app/ios/RNFBApp/RNFBAppModule.m
++++ b/node_modules/@react-native-firebase/app/ios/RNFBApp/RNFBAppModule.m
+@@ -16,7 +16,7 @@
+  */
+ 
+ #import <Firebase/Firebase.h>
+-#import <React/RCTUtils.h>
++@import React;
+ 
+ #import "RNFBAppModule.h"
+ #import "RNFBJSON.h"
+@@ -74,8 +74,7 @@ - (void)invalidate {
+ #pragma mark -
+ #pragma mark META Methods
+ 
+-RCT_EXPORT_METHOD(metaGetAll
+-                  : (RCTPromiseResolveBlock)resolve rejecter
++RCT_EXPORT_METHOD(metaGetAll : (RCTPromiseResolveBlock)resolve rejecter
+                   : (RCTPromiseRejectBlock)reject) {
+   resolve([RNFBMeta getAll]);
+ }
+@@ -83,8 +82,7 @@ - (void)invalidate {
+ #pragma mark -
+ #pragma mark JSON Methods
+ 
+-RCT_EXPORT_METHOD(jsonGetAll
+-                  : (RCTPromiseResolveBlock)resolve rejecter
++RCT_EXPORT_METHOD(jsonGetAll : (RCTPromiseResolveBlock)resolve rejecter
+                   : (RCTPromiseRejectBlock)reject) {
+   resolve([[RNFBJSON shared] getAll]);
+ }
+@@ -92,8 +90,7 @@ - (void)invalidate {
+ #pragma mark -
+ #pragma mark Preference Methods
+ 
+-RCT_EXPORT_METHOD(preferencesSetBool
+-                  : (NSString *)key boolValue
++RCT_EXPORT_METHOD(preferencesSetBool : (NSString *)key boolValue
+                   : (BOOL)boolValue resolver
+                   : (RCTPromiseResolveBlock)resolve rejecter
+                   : (RCTPromiseRejectBlock)reject) {
+@@ -101,8 +98,7 @@ - (void)invalidate {
+   resolve([NSNull null]);
+ }
+ 
+-RCT_EXPORT_METHOD(preferencesSetString
+-                  : (NSString *)key stringValue
++RCT_EXPORT_METHOD(preferencesSetString : (NSString *)key stringValue
+                   : (NSString *)stringValue resolver
+                   : (RCTPromiseResolveBlock)resolve rejecter
+                   : (RCTPromiseRejectBlock)reject) {
+@@ -110,14 +106,12 @@ - (void)invalidate {
+   resolve([NSNull null]);
+ }
+ 
+-RCT_EXPORT_METHOD(preferencesGetAll
+-                  : (RCTPromiseResolveBlock)resolve rejecter
++RCT_EXPORT_METHOD(preferencesGetAll : (RCTPromiseResolveBlock)resolve rejecter
+                   : (RCTPromiseRejectBlock)reject) {
+   resolve([[RNFBPreferences shared] getAll]);
+ }
+ 
+-RCT_EXPORT_METHOD(preferencesClearAll
+-                  : (RCTPromiseResolveBlock)resolve rejecter
++RCT_EXPORT_METHOD(preferencesClearAll : (RCTPromiseResolveBlock)resolve rejecter
+                   : (RCTPromiseRejectBlock)reject) {
+   [[RNFBPreferences shared] clearAll];
+   resolve([NSNull null]);
+@@ -130,14 +124,12 @@ - (void)invalidate {
+   [[RNFBRCTEventEmitter shared] notifyJsReady:ready];
+ }
+ 
+-RCT_EXPORT_METHOD(eventsGetListeners
+-                  : (RCTPromiseResolveBlock)resolve rejecter
++RCT_EXPORT_METHOD(eventsGetListeners : (RCTPromiseResolveBlock)resolve rejecter
+                   : (RCTPromiseRejectBlock)reject) {
+   resolve([[RNFBRCTEventEmitter shared] getListenersDictionary]);
+ }
+ 
+-RCT_EXPORT_METHOD(eventsPing
+-                  : (NSString *)eventName eventBody
++RCT_EXPORT_METHOD(eventsPing : (NSString *)eventName eventBody
+                   : (NSDictionary *)eventBody resolver
+                   : (RCTPromiseResolveBlock)resolve rejecter
+                   : (RCTPromiseRejectBlock)reject) {
+@@ -167,8 +159,7 @@ - (void)invalidate {
+ #pragma mark -
+ #pragma mark Firebase App Methods
+ 
+-RCT_EXPORT_METHOD(initializeApp
+-                  : (NSDictionary *)options appConfig
++RCT_EXPORT_METHOD(initializeApp : (NSDictionary *)options appConfig
+                   : (NSDictionary *)appConfig resolver
+                   : (RCTPromiseResolveBlock)resolve rejecter
+                   : (RCTPromiseRejectBlock)reject) {
+@@ -258,8 +249,7 @@ + (NSString *)getCustomDomain:(NSString *)appName {
+   }
+ }
+ 
+-RCT_EXPORT_METHOD(deleteApp
+-                  : (FIRApp *)firApp resolver
++RCT_EXPORT_METHOD(deleteApp : (FIRApp *)firApp resolver
+                   : (RCTPromiseResolveBlock)resolve rejecter
+                   : (RCTPromiseRejectBlock)reject) {
+   if (!firApp) {
+diff --git a/node_modules/@react-native-firebase/app/ios/RNFBApp/RNFBRCTEventEmitter.h b/node_modules/@react-native-firebase/app/ios/RNFBApp/RNFBRCTEventEmitter.h
+index a9ab51a..f70bf4f 100644
+--- a/node_modules/@react-native-firebase/app/ios/RNFBApp/RNFBRCTEventEmitter.h
++++ b/node_modules/@react-native-firebase/app/ios/RNFBApp/RNFBRCTEventEmitter.h
+@@ -16,7 +16,7 @@
+  */
+ 
+ #import <Foundation/Foundation.h>
+-#import <React/RCTEventEmitter.h>
++@import React;
+ 
+ /**
+  * Listeners for Firebase events and emits them to the JS layer
+diff --git a/node_modules/@react-native-firebase/app/ios/RNFBApp/RNFBSharedUtils.h b/node_modules/@react-native-firebase/app/ios/RNFBApp/RNFBSharedUtils.h
+index ebfe513..1ac6989 100644
+--- a/node_modules/@react-native-firebase/app/ios/RNFBApp/RNFBSharedUtils.h
++++ b/node_modules/@react-native-firebase/app/ios/RNFBApp/RNFBSharedUtils.h
+@@ -19,7 +19,7 @@
+ #define RNFBSharedUtils_h
+ 
+ #import <FirebaseCore/FirebaseCore.h>
+-#import <React/RCTBridgeModule.h>
++@import React;
+ 
+ #ifdef DEBUG
+ #define DLog(fmt, ...) NSLog((@"%s [Line %d] " fmt), __PRETTY_FUNCTION__, __LINE__, ##__VA_ARGS__);
+diff --git a/node_modules/@react-native-firebase/app/ios/RNFBApp/RNFBUtilsModule.h b/node_modules/@react-native-firebase/app/ios/RNFBApp/RNFBUtilsModule.h
+index 43ec807..ec7511e 100644
+--- a/node_modules/@react-native-firebase/app/ios/RNFBApp/RNFBUtilsModule.h
++++ b/node_modules/@react-native-firebase/app/ios/RNFBApp/RNFBUtilsModule.h
+@@ -18,7 +18,7 @@
+ #import <Foundation/Foundation.h>
+ #import <Photos/Photos.h>
+ 
+-#import <React/RCTBridgeModule.h>
++@import React;
+ 
+ @interface RNFBUtilsModule : NSObject <RCTBridgeModule>
+ 
+diff --git a/node_modules/@react-native-firebase/app/ios/RNFBApp/RNFBUtilsModule.m b/node_modules/@react-native-firebase/app/ios/RNFBApp/RNFBUtilsModule.m
+index 7d28331..c07d323 100644
+--- a/node_modules/@react-native-firebase/app/ios/RNFBApp/RNFBUtilsModule.m
++++ b/node_modules/@react-native-firebase/app/ios/RNFBApp/RNFBUtilsModule.m
+@@ -15,7 +15,7 @@
+  *
+  */
+ 
+-#import <React/RCTUtils.h>
++@import React;
+ 
+ #import "RNFBApp/RNFBSharedUtils.h"
+ #import "RNFBUtilsModule.h"
+diff --git a/node_modules/@react-native-firebase/app/ios/RNFBApp/RNFBVersion.m b/node_modules/@react-native-firebase/app/ios/RNFBApp/RNFBVersion.m
+index 261cb47..a41339b 100644
+--- a/node_modules/@react-native-firebase/app/ios/RNFBApp/RNFBVersion.m
++++ b/node_modules/@react-native-firebase/app/ios/RNFBApp/RNFBVersion.m
+@@ -15,7 +15,7 @@
+  *
+  */
+ 
+-#import <React/RCTVersion.h>
++@import React;
+ 
+ // generated file - do not modify or commit
+ NSString* const RNFBVersionString = @"25.1.0";

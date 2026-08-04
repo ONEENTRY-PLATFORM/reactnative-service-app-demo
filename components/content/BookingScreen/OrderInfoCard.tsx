@@ -4,7 +4,7 @@ import CustomImage from '@/components/shared/CustomImage';
 import {useAppSelector} from '@/state/hooks';
 import {Paragraph} from '@/components/shared/Paragraph';
 import {View} from 'react-native';
-import {appColors} from '@/constants/Colors';
+import {appColors} from '@/lib/constants/Colors';
 import Rating from '@/components/shared/Rating';
 import {MasterSalon} from '@/components/content/MasterScreen/MasterSalonsList';
 
@@ -12,6 +12,7 @@ type Props = {};
 
 const OrderInfoCard: React.FC<Props> = ({}) => {
   const {master, service, salon} = useAppSelector(state => state.OrderReducer);
+
   return (
     <CardBase
       outline
@@ -19,13 +20,12 @@ const OrderInfoCard: React.FC<Props> = ({}) => {
       touchableOpacityProps={{
         className: 'rounded-md',
       }}
-      className={'flex-row gap-x-5 h-[120px]'}
+      className={'flex-row gap-x-5'}
       onPress={() => {}}>
       <CustomImage
-        height={120}
         width={95}
         className={'rounded-md'}
-        style={{objectFit: 'cover'}}
+        style={{objectFit: 'cover', flex: 1}}
         uri={master?.attributeValues?.master_image?.value[0]?.downloadLink}
       />
       <View className={'flex-1 justify-around py-2'}>
@@ -42,7 +42,7 @@ const OrderInfoCard: React.FC<Props> = ({}) => {
             rating={master?.attributeValues?.master_rating?.value}
           />
         </View>
-        <View className={'py-2.5'}>
+        <View className={'pt-2.5'}>
           <Paragraph color={'dark'} size={16}>
             {salon?.localizeInfos?.title?.toUpperCase()}
           </Paragraph>

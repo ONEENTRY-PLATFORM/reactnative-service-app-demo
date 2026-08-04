@@ -9,12 +9,22 @@ const ServiceSelectButton: React.FC<Props> = ({}) => {
   const {select_text} = useAppSelector(
     state => state.SystemContentReducer.content,
   );
-  const service = useAppSelector(state => state.OrderReducer.service);
+  const {service, master} = useAppSelector(state => state.OrderReducer);
+
+  const onPress = () => {
+    if (master) {
+      return router.navigate('/(tabs)/booking');
+    }
+
+    if (service) {
+      return router.navigate('/(tabs)/masters');
+    }
+  };
 
   return (
     <CustomButton
-      onPress={() => router.navigate('/(tabs)/masters')}
-      style={{marginTop: 30, marginBottom: 15}}
+      onPress={onPress}
+      style={{marginBottom: 15}}
       isInline
       color={'primary'}
       title={select_text}

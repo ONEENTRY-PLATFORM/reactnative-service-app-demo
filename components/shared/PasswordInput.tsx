@@ -18,7 +18,7 @@ const PasswordInput = forwardRef<TextInput, Props>(
     const [visible, setVisible] = useState<boolean>(false);
     const passwordInputRef = useRef<TextInput>(null);
 
-    const {password_input_title_text} = useAppSelector(
+    const {password_input_title_text, reset_password_text} = useAppSelector(
       state => state.SystemContentReducer.content,
     );
 

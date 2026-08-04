@@ -1,7 +1,7 @@
 import React, {Dispatch, useEffect, useRef} from 'react';
 import {Animated, TouchableOpacity, View} from 'react-native';
-import {layoutPadding, layoutWidth, screenWidth} from '@/constants/sizes';
-import {appColors} from '@/constants/Colors';
+import {layoutPadding, layoutWidth, screenWidth} from '@/lib/constants/sizes';
+import {appColors} from '@/lib/constants/Colors';
 import {Paragraph} from '@/components/shared/Paragraph';
 import {number} from 'prop-types';
 

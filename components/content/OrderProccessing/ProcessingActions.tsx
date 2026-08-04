@@ -6,11 +6,13 @@ import {router} from 'expo-router';
 import {Alert, TouchableOpacity, View} from 'react-native';
 import Select from '@/components/shared/Select';
 import {Paragraph} from '@/components/shared/Paragraph';
-import {appColors} from '@/constants/Colors';
+import {appColors} from '@/lib/constants/Colors';
 import {api} from '@/api/defineApi';
-import {IOrdersFormData} from 'oneentry/dist/orders/ordersInterfaces';
+import {IOrdersFormData, IBaseOrdersEntity} from 'oneentry/dist/orders/ordersInterfaces';
 import {IError} from 'oneentry/dist/base/utils';
+import {ISessionEntity} from 'oneentry/dist/payments/paymentsInterfaces';
 import {finishOrder} from '@/state/reducers/OrderSlice';
+import dayjs from 'dayjs';
 
 type Props = {};
 
@@ -21,7 +23,10 @@ const ProcessingActions: React.FC<Props> = ({}) => {
     service,
     salon,
     master,
+    date,
+    time,
   } = useAppSelector(state => state.OrderReducer);
+
   const [isLoading, setIsLoading] = useState(false);
   const {sign_in_text, apply_text, terms_agreement} = useAppSelector(
     state => state.SystemContentReducer.content,
@@ -31,19 +36,35 @@ const ProcessingActions: React.FC<Props> = ({}) => {
   const toggleSwitch = () => setAgreed(!agreed);
 
   const createPaymentSession = async (id: number) => {
-    const {paymentUrl, id: sessionId} = await api.Payments.createSession(
-      id,
-      'session',
-    );
+    const session = await api.Payments.createSession(id, 'session');
+
+    if ((session as IError)?.statusCode >= 400) {
+      throw new Error((session as IError).message);
+    }
+
+    const {paymentUrl, id: sessionId} = session as ISessionEntity;
 
     if (paymentUrl) {
       router.push({
-        pathname: '/(tabs)/stripe_payment',
+        pathname: '/stripe_payment',
         params: {
           paymentUrl,
           id: sessionId,
+          orderId: id,
         },
       });
+    }
+  };
+
+  const subscribeToEvent = async (id: number) => {
+    try {
+      const result = await api.Events.subscribeByMarker('order_change', id);
+
+      if ((result as IError).statusCode > 400) {
+        throw new Error((result as IError).message);
+      }
+    } catch (e) {
+      console.warn(JSON.stringify(e));
     }
   };
 
@@ -56,27 +77,25 @@ const ProcessingActions: React.FC<Props> = ({}) => {
           {
             marker: 'order_salon',
             type: 'entity',
-            value: [
-              {
-                id: salon.id,
-                title: salon.localizeInfos.title,
-                value: salon.id,
-                parentId: salon.parentId,
-                depth: salon.depth,
-              },
-            ],
+            value: [salon.id],
           },
           {
             marker: 'master',
             type: 'list',
+            value: [master.id.toString()],
+          },
+          {
+            marker: 'interval',
+            type: 'timeInterval',
             value: [
-              {
-                title: master?.attributeValues?.master_name?.value,
-                value: master.id.toString(),
-              },
+              [
+                dayjs(date).set('hour', time).toISOString(),
+                dayjs(date).set('hour', time + 1).toISOString(),
+              ],
             ],
           },
         ];
+
         const result = await api.Orders.createOrder('orders', {
           formData: editedFormData,
           formIdentifier: 'order',
@@ -89,17 +108,20 @@ const ProcessingActions: React.FC<Props> = ({}) => {
           ],
         });
 
-        if ((result as IError).statusCode > 400) {
+        if ((result as IError)?.statusCode >= 400) {
           throw new Error((result as IError).message);
         }
 
-        if (result?.paymentAccountIdentifier !== 'cash') {
-          await createPaymentSession(result.id);
+        const order = result as IBaseOrdersEntity;
+
+        await subscribeToEvent(order.id);
+        if (order.paymentAccountIdentifier !== 'cash') {
+          await createPaymentSession(order.id);
           setIsLoading(false);
         } else {
           setIsLoading(false);
           dispatch(finishOrder());
-          return router.navigate(`/(tabs)/confirm_booking?id=${result.id}`);
+          return router.replace(`/(tabs)/confirm_booking?id=${order.id}`);
         }
       }
     } catch (e: any) {

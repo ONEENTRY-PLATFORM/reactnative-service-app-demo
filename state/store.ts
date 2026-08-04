@@ -5,6 +5,7 @@ import SalonsReducer from './reducers/SalonsSlice';
 import MastersReducer from './reducers/MastersSlice';
 import SystemContentReducer from './reducers/SystemContentSlice';
 import GalleryReducer from './reducers/GallerySlice';
+import BookingPrefillReducer from './reducers/BookingPrefillSlice';
 import {RTKApi} from '@/api';
 
 const rootReducer = combineReducers({
@@ -14,6 +15,7 @@ const rootReducer = combineReducers({
   MastersReducer,
   SystemContentReducer,
   GalleryReducer,
+  BookingPrefillReducer,
   [RTKApi.reducerPath]: RTKApi.reducer,
 });
 

@@ -7,6 +7,7 @@ import {useAppSelector} from '@/state/hooks';
 import CustomInput from '@/components/shared/CustomInput';
 import CustomButton from '@/components/shared/CustomButton';
 import {useUpdateMeMutation} from '@/api';
+import DeleteAccountButton from '@/components/content/ProfileScreen/DeleteAccountButton';
 
 type Props = {};
 
@@ -14,14 +15,8 @@ const UpdateUserForm: React.FC<Props> = ({}) => {
   const {phone_text, save_button_text, exit_text} = useAppSelector(
     state => state.SystemContentReducer.content,
   );
-  const [nameValue, setNameValue] = useState<InputValue>({
-    value: '',
-    valid: true,
-  });
-  const [phoneValue, setPhoneValue] = useState<InputValue>({
-    value: '',
-    valid: true,
-  });
+  const [nameValue, setNameValue] = useState<string>('');
+  const [phoneValue, setPhoneValue] = useState<string>('');
   const {user, logOut} = useAuth();
   const usernameRef = useRef<TextInput>(null);
   const phoneRef = useRef<TextInput>(null);
@@ -35,7 +30,7 @@ const UpdateUserForm: React.FC<Props> = ({}) => {
       if (nameValue) {
         formData.push({
           marker: 'name_reg',
-          value: nameValue.value,
+          value: nameValue,
           type: 'string',
         });
       }
@@ -43,7 +38,7 @@ const UpdateUserForm: React.FC<Props> = ({}) => {
       if (phoneValue) {
         formData.push({
           marker: 'phone_reg',
-          value: phoneValue.value,
+          value: phoneValue,
           type: 'string',
         });
       }
@@ -76,42 +71,40 @@ const UpdateUserForm: React.FC<Props> = ({}) => {
     if (fields) {
       fields.map(item => {
         if (item.marker === 'phone_reg') {
-          console.log(item);
-          setPhoneValue({value: item.value, valid: true});
+          setPhoneValue(String(item.value ?? ''));
         }
 
         if (item.marker === 'name_reg') {
-          setNameValue({value: item.value, valid: true});
+          setNameValue(String(item.value ?? ''));
         }
       });
     }
   }, [user]);
 
-  const onUpdateNameValue = (value: InputValue) => {
+  const onUpdateNameValue = (value: string) => {
     setNameValue(value);
   };
 
-  const onUpdatePhoneValue = (value: InputValue) => {
+  const onUpdatePhoneValue = (value: string) => {
     setPhoneValue(value);
   };
 
   return (
     <KeyboardAwareScrollView
       contentContainerStyle={{flex: 1, justifyContent: 'space-between'}}
-      bottomOffset={65}>
+      bottomOffset={40}>
       <View style={{gap: 10}}>
         <CustomInput
           value={nameValue}
-          setValue={onUpdateNameValue}
+          onChangeText={onUpdateNameValue}
           title={'Name'}
           placeholder={'Name'}
-          validators={{requiredValidator: {}}}
           onSubmitEditing={() => phoneRef?.current?.focus()}
           ref={usernameRef}
         />
         <CustomInput
           value={phoneValue}
-          setValue={onUpdatePhoneValue}
+          onChangeText={onUpdatePhoneValue}
           placeholder={phone_text}
           title={phone_text}
           keyboardType={'phone-pad'}
@@ -125,6 +118,7 @@ const UpdateUserForm: React.FC<Props> = ({}) => {
         <CustomButton isInline onPress={onExitUser}>
           {exit_text}
         </CustomButton>
+        <DeleteAccountButton />
       </View>
     </KeyboardAwareScrollView>
   );

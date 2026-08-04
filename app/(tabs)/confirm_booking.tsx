@@ -9,8 +9,6 @@ type Props = {};
 const ConfirmBooking: React.FC<Props> = ({}) => {
   const params = useLocalSearchParams();
 
-  console.log('params' + params);
-
   return (
     <Screen edges={['top', 'horizontal']}>
       {params?.id ? <BookingSucceed /> : <BookingFailed />}

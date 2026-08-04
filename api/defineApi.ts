@@ -1,49 +1,75 @@
 import {defineOneEntry} from 'oneentry';
-import {MMKV} from 'react-native-mmkv';
+import {createMMKV} from 'react-native-mmkv';
 
-export const storage = new MMKV();
+export const storage = createMMKV();
 
-storage.addOnValueChangedListener((key) => {
-  if (!storage.getString('refresh')) {
-
-  }
-});
+// KEY: OneEntry binds the refresh token to a device-metadata fingerprint.
+// When the SDK is created without a persisted fingerprint it generates a new
+// one on every cold-start, and the server rejects the previously-saved
+// refresh token with "Unauthorized" / "Provided token is incorrect".
+// Persisting the fingerprint alongside the refresh token is the fix — the
+// pattern mirrors apps/rn-shop/src/api/api/defineApi.ts.
+const DEVICE_METADATA_KEY = 'oneentry-device-metadata';
+let deviceMetadata: string | undefined = storage.getString(DEVICE_METADATA_KEY);
 
 const saveFunction = async (res: string) => {
   try {
-    if (res) {
+    // Empty string means the SDK cleared the session (logout / expired) —
+    // wipe MMKV so cold-start on the next launch shows the sign-in screen.
+    if (!res) {
+      storage.remove('refresh');
+    } else {
       storage.set('refresh', res);
     }
   } catch (e) {
-    console.warn('=>(hooks.ts:20) e', e);
+    // eslint-disable-next-line no-console
+    console.warn('[Auth] saveFunction failed', e);
   }
 };
 
 const url = process.env.EXPO_PUBLIC_API_URL || '';
 
-//Initial hooks definition
-export let api = defineOneEntry(url, {
-  langCode: 'en_US',
-  token: process.env.EXPO_PUBLIC_API_KEY,
-  auth: {
-    saveFunction,
-    refreshToken: storage.getString('refresh'),
-  },
-  errors: {
-    isShell: false,
-  },
-});
-
-export function reDefine(refreshToken?: string, langCode?: string) {
-  api = defineOneEntry(url, {
+function buildApi(refreshToken?: string, langCode?: string) {
+  return defineOneEntry(url, {
     langCode: langCode || 'en_US',
-    token: url,
+    token: process.env.EXPO_PUBLIC_API_KEY,
+    deviceMetadata,
     auth: {
       saveFunction,
-      refreshToken,
+      refreshToken: refreshToken || undefined,
     },
     errors: {
       isShell: false,
     },
   });
+}
+
+export let api = buildApi(storage.getString('refresh'));
+
+// Restore the persisted device metadata (or capture the freshly-generated
+// one on the very first launch) so the fingerprint stays stable across
+// cold-starts. Call this ONCE from the auth context on mount.
+export async function initDeviceMetadata(): Promise<void> {
+  try {
+    const saved = storage.getString(DEVICE_METADATA_KEY);
+    if (saved) {
+      deviceMetadata = saved;
+      api.AuthProvider.setDeviceMetadata(saved);
+      return;
+    }
+    const current = api.AuthProvider.getDeviceMetadata();
+    if (current) {
+      deviceMetadata = current;
+      storage.set(DEVICE_METADATA_KEY, current);
+    }
+  } catch (e) {
+    console.warn('[Auth] initDeviceMetadata failed', e);
+  }
+}
+
+export function reDefine(refreshToken?: string, langCode?: string) {
+  api = buildApi(refreshToken, langCode);
+  if (deviceMetadata) {
+    api.AuthProvider.setDeviceMetadata(deviceMetadata);
+  }
 }

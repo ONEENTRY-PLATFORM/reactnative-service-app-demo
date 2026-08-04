@@ -1,11 +1,18 @@
-import React, {useMemo, useRef, useState} from 'react';
-import {useLocalSearchParams} from 'expo-router';
-import {useGetChildPagesByUrlQuery} from '@/api';
+import React, {
+  useCallback,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
+import {useFocusEffect, useLocalSearchParams} from 'expo-router';
+import {useGetChildPagesByUrlQuery, useLazyGetChildPagesByUrlQuery} from '@/api';
 import Footer from '@/components/shared/Footer';
 import CardBase from '@/components/shared/CardBase';
 import CustomImage from '@/components/shared/CustomImage';
-import {FlatList} from 'react-native';
+import {FlatList, Platform, View} from 'react-native';
 import CollectionSliderModal from '@/components/shared/CollectionSliderModal';
+import { IPagesEntity } from 'oneentry/dist/pages/pagesInterfaces';
 
 const GalleryCategoryItem = ({
   imageUrl,
@@ -31,9 +38,18 @@ type Props = {};
 
 const GalleryCategoryList: React.FC<Props> = ({}) => {
   const {marker} = useLocalSearchParams();
-  const {data} = useGetChildPagesByUrlQuery({url: marker as string});
+  const [getPages, {data, reset}] = useLazyGetChildPagesByUrlQuery({});
   const defaultInd = useRef<number | undefined>();
   const [visible, setVisible] = useState<boolean>(false);
+
+  useFocusEffect(
+    useCallback(() => {
+      getPages({url: marker as string});
+      return () => {
+        reset();
+      };
+    }, [marker]),
+  );
 
   const sortedImages = useMemo(() => {
     if (!data) {
@@ -42,23 +58,14 @@ const GalleryCategoryList: React.FC<Props> = ({}) => {
 
     const result: any[] = [];
     // Create a deep copy to avoid modifying the original data
-    const items = data.map(item => ({
-      ...item,
-      attributeValues: {
-        ...item.attributeValues,
-        gallery_photos: {
-          ...item.attributeValues.gallery_photos,
-          value: [...item.attributeValues.gallery_photos.value],
-        },
-      },
-    }));
+    const items = JSON.parse(JSON.stringify(data));
 
     let hasMoreImages = true;
 
     while (hasMoreImages) {
       hasMoreImages = false; // Assume no more images to process
 
-      items.forEach(item => {
+      items.forEach((item: IPagesEntity) => {
         const gallery = item?.attributeValues?.gallery_photos?.value;
         if (gallery && gallery.length > 0) {
           hasMoreImages = true; // If there are images, set flag to true
@@ -93,12 +100,14 @@ const GalleryCategoryList: React.FC<Props> = ({}) => {
           />
         )}
       />
-      <CollectionSliderModal
-        defaultIndex={defaultInd.current}
-        visible={visible}
-        setVisible={setVisible}
-        items={sortedImages}
-      />
+      <View className={Platform.OS === 'android' ? 'flex-1' : ''}>
+        <CollectionSliderModal
+          defaultIndex={defaultInd.current}
+          visible={visible}
+          setVisible={setVisible}
+          items={sortedImages}
+        />
+      </View>
     </>
   );
 };

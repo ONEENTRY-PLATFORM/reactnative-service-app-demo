@@ -7,7 +7,7 @@ import {
   ViewStyle,
 } from 'react-native';
 import {Paragraph, ParagraphProps} from '@/components/shared/Paragraph';
-import {appColors} from '@/constants/Colors';
+import {appColors} from '@/lib/constants/Colors';
 
 type Props = TouchableOpacityProps & {
   title?: string;
@@ -33,7 +33,7 @@ const CustomButton: React.FC<Props> = ({
   paragraphProps,
   ...rest
 }) => {
-  const {disabled, style} = rest;
+  const {disabled, style, className, ...other} = rest;
 
   const buttonStyles: ViewStyle = {
     backgroundColor: !isInline
@@ -53,11 +53,11 @@ const CustomButton: React.FC<Props> = ({
 
   return (
     <TouchableOpacity
-      className={'items-center justify-center rounded-full'}
+      className={`!items-center !justify-center !rounded-full ${className}`}
       activeOpacity={0.7}
-      {...rest}
       style={[buttonStyles, style]}
-      disabled={disabled || isLoading}>
+      disabled={disabled || isLoading}
+      {...other}>
       {isLoading ? (
         <ActivityIndicator
           size={'small'}

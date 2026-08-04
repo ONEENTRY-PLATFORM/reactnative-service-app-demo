@@ -8,13 +8,15 @@ import {
 } from 'oneentry/dist/pages/pagesInterfaces';
 import {
   IFilterParams,
-  IProductEntity,
   IProductsEntity,
   IProductsResponse,
 } from 'oneentry/dist/products/productsInterfaces';
 import {IAdminEntity} from 'oneentry/dist/admins/adminsInterfaces';
 import {addMasters} from '@/state/reducers/MastersSlice';
-import {IBlockEntity} from 'oneentry/dist/blocks/blocksInterfaces';
+import {
+  IBlockEntity,
+  IBlockSlidesResponse,
+} from 'oneentry/dist/blocks/blocksInterfaces';
 import {
   IAuthFormData,
   IAuthProvidersEntity,
@@ -25,7 +27,16 @@ import {
   IAccountsEntity,
   ISessionEntity,
 } from 'oneentry/dist/payments/paymentsInterfaces';
-import {IOrdersByMarkerEntity} from 'oneentry/dist/orders/ordersInterfaces';
+import {
+  ICreateRefundRequest,
+  IOrderByMarkerEntity,
+  IOrdersByMarkerEntity,
+} from 'oneentry/dist/orders/ordersInterfaces';
+import {IAttributeSetsEntity} from 'oneentry/dist/attribute-sets/attributeSetsInterfaces';
+import {
+  IBodyPostFormData,
+  IPostFormResponse,
+} from 'oneentry/dist/forms-data/formsDataInterfaces';
 
 export const RTKApi = createApi({
   reducerPath: 'api',
@@ -86,7 +97,7 @@ export const RTKApi = createApi({
     }),
 
     getProductsByPageUrl: builder.query<
-      IProductEntity[],
+      IProductsEntity[],
       {pageUrl: string; filters?: IFilterParams[]}
     >({
       queryFn: async ({pageUrl, filters}) => {
@@ -110,9 +121,12 @@ export const RTKApi = createApi({
     getMasters: builder.query<IAdminEntity[], {}>({
       queryFn: async ({}) => {
         try {
-          const result = await api.Admins.getAdminsInfo();
+          const result = await api.Admins.getAdminsInfo([]);
 
-          if ((result as IError)?.statusCode >= 400) {
+          if (
+            (result as IError)?.statusCode >= 400 ||
+            typeof (result as IError) === 'string'
+          ) {
             throw new Error((result as IError)?.message);
           }
 
@@ -125,7 +139,9 @@ export const RTKApi = createApi({
         try {
           const {data} = await queryFulfilled;
           // Dispatch your slice's action with the fetched data
-          dispatch(addMasters(data));
+          if (data) {
+            dispatch(addMasters(data));
+          }
         } catch (err) {
           console.error('Failed to fetch masters:', err);
         }
@@ -150,6 +166,8 @@ export const RTKApi = createApi({
           }
           return {data: result as IBlockEntity};
         } catch (e: any) {
+          console.log(e);
+
           return {error: e.message};
         }
       },
@@ -228,10 +246,9 @@ export const RTKApi = createApi({
             throw new Error((result as IError)?.message);
           }
 
-          result.attributes.sort(
-            (a: IAttributes, b: IAttributes) => a.position - b.position,
-          );
-          return {data: result as IFormsEntity};
+          const form = result as IFormsEntity;
+          form.attributes?.sort((a, b) => a.position - b.position);
+          return {data: form};
         } catch (e: any) {
           return {error: e.message};
         }
@@ -294,7 +311,6 @@ export const RTKApi = createApi({
               return api.Pages.getPageByUrl(url);
             }),
           );
-          console.log(result);
 
           if (result[0] === undefined) {
             throw new Error('No products found');
@@ -338,7 +354,7 @@ export const RTKApi = createApi({
           if ((result as IError)?.statusCode >= 400) {
             throw new Error((result as IError)?.message);
           }
-          return {data: (result as ISessionEntity)};
+          return {data: result as ISessionEntity};
         } catch (e: any) {
           return {error: e.message};
         }
@@ -355,6 +371,157 @@ export const RTKApi = createApi({
           }
 
           return {data: result as IOrdersByMarkerEntity};
+        } catch (e: any) {
+          return {error: e.message};
+        }
+      },
+    }),
+
+    getOrderByID: builder.query<
+      IOrderByMarkerEntity,
+      {marker: string; id: number}
+    >({
+      queryFn: async ({marker, id}) => {
+        try {
+          const result = await api.Orders.getOrderByMarkerAndId(marker, id);
+
+          if ((result as IError)?.statusCode >= 400) {
+            throw new Error((result as IError)?.message);
+          }
+
+          return {data: result as IOrderByMarkerEntity};
+        } catch (e: any) {
+          console.warn('=>(RTKApi.ts:121) e', e);
+          return {error: e.message};
+        }
+      },
+    }),
+
+    getAttributesByMarker: builder.query<
+      IAttributeSetsEntity[],
+      {setMarker: string; langCode?: string}
+    >({
+      queryFn: async ({setMarker}) => {
+        try {
+          const result =
+            await api.AttributesSets.getAttributesByMarker(setMarker);
+
+          if ((result as IError)?.statusCode >= 400) {
+            throw new Error((result as IError)?.message);
+          }
+          return {data: (result as IAttributeSetsEntity[]) || {}};
+        } catch (e: any) {
+          return {error: e.message};
+        }
+      },
+    }),
+
+    // Hero carousel slides on the home page (web calls this on `/`).
+    getSlides: builder.query<IBlockSlidesResponse, {marker: string}>({
+      queryFn: async ({marker}) => {
+        try {
+          const result = await api.Blocks.getSlides(marker);
+          if ((result as IError)?.statusCode >= 400) {
+            throw new Error((result as IError)?.message);
+          }
+          return {data: result as IBlockSlidesResponse};
+        } catch (e: any) {
+          return {error: e.message};
+        }
+      },
+    }),
+
+    // Debounced live search in the header (web calls this on every keystroke).
+    // Empty query short-circuits to [] so we don't hit the network.
+    searchProducts: builder.query<
+      IProductsEntity[],
+      {name: string; langCode?: string}
+    >({
+      queryFn: async ({name, langCode}) => {
+        if (!name || !name.trim()) {
+          return {data: []};
+        }
+        try {
+          const result = await api.Products.searchProduct(name, langCode);
+          if ((result as IError)?.statusCode >= 400) {
+            throw new Error((result as IError)?.message);
+          }
+          return {data: (result as IProductsEntity[]) || []};
+        } catch (e: any) {
+          return {error: e.message};
+        }
+      },
+    }),
+
+    // "Related services" block on the product detail screen.
+    getRelatedProductsById: builder.query<
+      IProductsEntity[],
+      {id: number; langCode?: string}
+    >({
+      queryFn: async ({id, langCode}) => {
+        try {
+          const result = await api.Products.getRelatedProductsById(id, langCode);
+          if ((result as IError)?.statusCode >= 400) {
+            throw new Error((result as IError)?.message);
+          }
+          return {data: (result as IProductsResponse).items || []};
+        } catch (e: any) {
+          return {error: e.message};
+        }
+      },
+    }),
+
+    // Contact-form / feedback submission.
+    postFormsData: builder.mutation<
+      IPostFormResponse,
+      {body: IBodyPostFormData; langCode?: string}
+    >({
+      queryFn: async ({body, langCode}) => {
+        try {
+          const result = await api.FormData.postFormsData(body, langCode);
+          if ((result as IError)?.statusCode >= 400) {
+            throw new Error((result as IError)?.message);
+          }
+          return {data: result as IPostFormResponse};
+        } catch (e: any) {
+          return {error: e.message};
+        }
+      },
+    }),
+
+    // Refund request from the visits history screen. `products` is a map
+    // keyed by product id — see ICreateRefundRequest shape in the SDK.
+    createRefundRequest: builder.mutation<
+      boolean,
+      {id: number; body: ICreateRefundRequest}
+    >({
+      queryFn: async ({id, body}) => {
+        try {
+          const result = await api.Orders.createRefundRequest(id, body);
+          if ((result as IError)?.statusCode >= 400) {
+            throw new Error((result as IError)?.message);
+          }
+          return {data: Boolean(result)};
+        } catch (e: any) {
+          return {error: e.message};
+        }
+      },
+    }),
+
+    // Poll for payment status after the user returns from Stripe WebView.
+    // The SDK returns a single session or an array; we always hand back an
+    // array so callers can pick the latest without a type guard.
+    getSessionByOrderId: builder.query<ISessionEntity[], {orderId: number}>({
+      queryFn: async ({orderId}) => {
+        try {
+          const result = await api.Payments.getSessionByOrderId(orderId);
+          if ((result as IError)?.statusCode >= 400) {
+            throw new Error((result as IError)?.message);
+          }
+          const sessions = Array.isArray(result)
+            ? (result as ISessionEntity[])
+            : [result as ISessionEntity];
+          return {data: sessions};
         } catch (e: any) {
           return {error: e.message};
         }

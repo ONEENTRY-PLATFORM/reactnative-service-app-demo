@@ -1,11 +1,12 @@
-import React, {useMemo, useRef, useState} from 'react';
-import {FlatList, View} from 'react-native';
-import {Paragraph} from '@/components/shared/Paragraph';
-import {useGetPagesByIdsQuery} from '@/api';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
+import { FlatList, View } from 'react-native';
+import { Paragraph } from '@/components/shared/Paragraph';
+import { useLazyGetPagesByIdsQuery } from '@/api';
 import Footer from '@/components/shared/Footer';
 import CardBase from '@/components/shared/CardBase';
 import CustomImage from '@/components/shared/CustomImage';
 import CollectionSliderModal from '@/components/shared/CollectionSliderModal';
+import { useFocusEffect } from 'expo-router';
 
 const GalleryCategoryItem = ({
   imageUrl,
@@ -20,7 +21,7 @@ const GalleryCategoryItem = ({
         height={165}
         width={165}
         className={'rounded-lg'}
-        style={{objectFit: 'cover', marginTop: 5}}
+        style={{ objectFit: 'cover', marginTop: 5 }}
         uri={imageUrl}
       />
     </CardBase>
@@ -31,10 +32,19 @@ type Props = {
   portfolio: number[];
 };
 
-const MasterPortfolio: React.FC<Props> = ({portfolio}) => {
-  const {data, isLoading} = useGetPagesByIdsQuery({ids: portfolio});
+const MasterPortfolio: React.FC<Props> = ({ portfolio }) => {
+  const [getPages, { data, isLoading, reset }] = useLazyGetPagesByIdsQuery({});
   const defaultInd = useRef<number | undefined>();
   const [visible, setVisible] = useState<boolean>(false);
+
+  useFocusEffect(
+    useCallback(() => {
+      getPages({ ids: portfolio });
+      return () => {
+        reset();
+      };
+    }, [portfolio]),
+  );
 
   const sortedImages = useMemo(() => {
     if (!data) {
@@ -76,7 +86,7 @@ const MasterPortfolio: React.FC<Props> = ({portfolio}) => {
     return result;
   }, [data]);
 
-  if (isLoading) {
+  if (isLoading || !data) {
     return <View className={'flex-1 animate-pulse bg-gray'} />;
   }
 
@@ -87,13 +97,13 @@ const MasterPortfolio: React.FC<Props> = ({portfolio}) => {
       </Paragraph>
       <FlatList
         numColumns={2}
-        contentContainerStyle={{gap: 20}}
-        columnWrapperStyle={{justifyContent: 'space-between'}}
+        contentContainerStyle={{ gap: 20 }}
+        columnWrapperStyle={{ justifyContent: 'space-between' }}
         showsVerticalScrollIndicator={false}
         ListFooterComponent={<Footer />}
         scrollEnabled={false}
         data={sortedImages}
-        renderItem={({item, index}) => (
+        renderItem={({ item, index }) => (
           <GalleryCategoryItem
             onPress={() => {
               defaultInd.current = index;

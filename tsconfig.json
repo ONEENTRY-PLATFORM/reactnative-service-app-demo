@@ -1,8 +1,10 @@
 {
-  "extends": "expo/tsconfig.base",
+  "extends": "expo/tsconfig.base.json",
   "compilerOptions": {
     "strict": true,
-    "typeRoots": ["./types"],
+    "typeRoots": [
+      "./types"
+    ],
     "paths": {
       "@/*": [
         "./*"
@@ -13,7 +15,9 @@
     "**/*.ts",
     "**/*.tsx",
     ".expo/types/**/*.ts",
-    "expo-env.d.ts",
-    "nativewind-env.d.ts"
+    "types/expo-env.d.ts",
+    "types/nativewind-env.d.ts",
+    "nativewind-env.d.ts",
+    "expo-env.d.ts"
   ]
 }

@@ -13,7 +13,7 @@ const GoBackButton: React.FC<Props> = ({onPressCustom, style = 'default'}) => {
     if (router.canGoBack()) {
       router.back();
     } else {
-      router.replace('/(tabs)/home_mobile');
+      router.replace('/(tabs)/home');
     }
   };
 

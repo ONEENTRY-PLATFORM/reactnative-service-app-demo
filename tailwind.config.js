@@ -1,6 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 const {hairlineWidth} = require("nativewind/theme");
-const {appColors} = require('./constants/Colors');
+const {appColors} = require('./lib/constants/Colors');
 
 module.exports = {
   content: ["./app/**/*.{js,jsx,ts,tsx}", "./components/**/*.{js,jsx,ts,tsx}"],
@@ -16,6 +16,14 @@ module.exports = {
         layout: '20px',
       },
       colors: appColors,
+      fontFamily: {
+        // Wired in app/_layout.tsx via useFonts (@expo-google-fonts/*).
+        // Falls back to the platform default until the fonts load.
+        lato: ['Lato_400Regular'],
+        'lato-light': ['Lato_300Light'],
+        'lato-bold': ['Lato_700Bold'],
+        'league-gothic': ['LeagueGothic_400Regular'],
+      },
       keyframes: {
         zoom: {
           '0%, 100%': { transform: 'scale-1' },

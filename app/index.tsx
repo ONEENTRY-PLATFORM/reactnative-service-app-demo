@@ -6,7 +6,7 @@ type Props = {
 }
 
 const Index: React.FC<Props> = ({}) => {
-  return <Redirect href={'/(tabs)/home_mobile'} />;
+  return <Redirect href={'/(tabs)/home'} />;
 };
 
 export default Index;

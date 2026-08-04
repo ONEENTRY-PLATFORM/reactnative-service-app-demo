@@ -1,32 +1,23 @@
 {
   "expo": {
-    "name": "oe-beauty",
-    "slug": "oe-beauty",
+    "name": "Beauty Service App",
+    "slug": "beauty-service-app",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
-    "splash": {
-      "image": "./assets/images/splash-icon.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
-    },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.oneentry.beautyrn",
-      "googleServicesFile": "./GoogleService-Info.plist",
-      "entitlements": {
-        "aps-environment": "production"
-      }
+      "bundleIdentifier": "com.example.beautyservice"
     },
     "android": {
+      "versionCode": 1,
+      "package": "com.example.beautyservice",
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
-      },
-      "package": "com.oneentry.beautyrn"
+        "foregroundImage": "./assets/images/icon.png",
+        "backgroundColor": "#FFFFFF"
+      }
     },
     "web": {
       "bundler": "metro",
@@ -49,13 +40,30 @@
         "expo-build-properties",
         {
           "ios": {
-            "useFrameworks": "static"
+            "useFrameworks": "static",
+            "deploymentTarget": "16.4"
           }
         }
-      ]
+      ],
+      "expo-font",
+      "./plugins",
+      "expo-image",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/images/splash-icon.png",
+          "resizeMode": "cover",
+          "backgroundColor": "#000000"
+        }
+      ],
+      "expo-status-bar",
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {}
     }
   }
 }

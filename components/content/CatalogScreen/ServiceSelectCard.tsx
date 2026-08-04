@@ -1,25 +1,28 @@
 import React from 'react';
 import CardBase from '@/components/shared/CardBase';
-import {IProductEntity} from 'oneentry/dist/products/productsInterfaces';
+import {IProductsEntity} from 'oneentry/dist/products/productsInterfaces';
 import {View} from 'react-native';
 import {Paragraph} from '@/components/shared/Paragraph';
 import Price from '@/components/shared/Price';
 import Select from '@/components/shared/Select';
-import {appColors} from '@/constants/Colors';
+import {appColors} from '@/lib/constants/Colors';
 import ServicesGroup from './ServicesGroup.svg';
 import {useAppDispatch, useAppSelector} from '@/state/hooks';
 import {
+  deselectMasterForOrder,
   deselectServiceForOrder,
+  deselectTimeForOrder,
   selectServiceForOrder,
 } from '@/state/reducers/OrderSlice';
 
 type Props = {
-  service: IProductEntity;
+  service: IProductsEntity;
 };
 
 const ServiceSelectCard: React.FC<Props> = ({service}) => {
   const dispatch = useAppDispatch();
   const selectedService = useAppSelector(state => state.OrderReducer.service);
+  const selectedMaster = useAppSelector(state => state.OrderReducer.master);
 
   const isSelected = selectedService?.id === service.id;
 
@@ -28,6 +31,22 @@ const ServiceSelectCard: React.FC<Props> = ({service}) => {
       return dispatch(deselectServiceForOrder());
     }
     dispatch(selectServiceForOrder(service));
+
+    // Only deselect master if they don't support this service
+    if (selectedMaster) {
+      const masterSupportsService =
+        selectedMaster?.attributeValues?.master_services?.value?.some(
+          (masterService: Record<any, any>) => {
+            return service?.localizeInfos?.title === masterService?.title;
+          },
+        );
+
+      if (!masterSupportsService) {
+        dispatch(deselectMasterForOrder());
+      }
+    }
+
+    dispatch(deselectTimeForOrder());
   };
 
   const type = service.attributeValues?.type?.value[0]?.title;
@@ -68,7 +87,7 @@ const ServiceSelectCard: React.FC<Props> = ({service}) => {
             <View
               style={{backgroundColor: color ?? appColors.primary}}
               className={
-                'w-10 h-10 items-center justify-center text-center rounded-full'
+                'w-11 h-11 items-center justify-center text-center rounded-full'
               }>
               <Paragraph
                 size={10}
@@ -96,7 +115,10 @@ const ServiceSelectCard: React.FC<Props> = ({service}) => {
                 sale={service?.attributeValues?.sale?.value}
                 currency={service?.attributeValues?.currency?.value}
               />
-              <Select selected={isSelected} color={color ?? appColors.primary} />
+              <Select
+                selected={isSelected}
+                color={color ?? appColors.primary}
+              />
             </View>
           </View>
         </View>

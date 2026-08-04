@@ -1,7 +1,7 @@
 import React, {memo, useMemo} from 'react';
 import {TextStyle, View} from 'react-native';
 import {Paragraph} from '@/components/shared/Paragraph';
-import {appColors} from '@/constants/Colors';
+import {appColors} from '@/lib/constants/Colors';
 
 type Props = {
   price?: number;

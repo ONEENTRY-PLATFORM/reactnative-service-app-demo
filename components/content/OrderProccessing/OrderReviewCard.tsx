@@ -6,7 +6,7 @@ import {useAppSelector} from '@/state/hooks';
 import {Paragraph} from '@/components/shared/Paragraph';
 import Rating from '@/components/shared/Rating';
 import dayjs from 'dayjs';
-import {appColors} from '@/constants/Colors';
+import {appColors} from '@/lib/constants/Colors';
 import {Redirect} from 'expo-router';
 
 type Props = {};

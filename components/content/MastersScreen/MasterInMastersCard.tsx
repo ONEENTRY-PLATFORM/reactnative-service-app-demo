@@ -7,13 +7,14 @@ import {Paragraph} from '@/components/shared/Paragraph';
 import Rating from '@/components/shared/Rating';
 import {useAppDispatch, useAppSelector} from '@/state/hooks';
 import Select from '@/components/shared/Select';
-import {appColors} from '@/constants/Colors';
+import {appColors} from '@/lib/constants/Colors';
 import {Link} from 'expo-router';
 import {
   deselectSalonForOrder,
   deselectMasterForOrder,
   selectMasterForOrder,
   selectSalonForOrder,
+  deselectTimeForOrder,
 } from '@/state/reducers/OrderSlice';
 
 type Props = {
@@ -26,16 +27,14 @@ const MasterInMastersCard: React.FC<Props> = ({master, role}) => {
     state => state.SystemContentReducer?.content,
   );
   const selectedMaster = useAppSelector(state => state.OrderReducer.master);
-  const selectedSalon = useAppSelector(
-    state => state.SalonsReducer.selectedSalon,
-  );
+  const selectedSalon = useAppSelector(state => state.OrderReducer.salon);
   const dispatch = useAppDispatch();
 
   const isSelected = master?.id === selectedMaster?.id;
 
   const onSelect = () => {
+    dispatch(deselectTimeForOrder());
     if (isSelected) {
-      dispatch(deselectSalonForOrder());
       return dispatch(deselectMasterForOrder());
     }
     if (selectedSalon) {

@@ -1,25 +1,60 @@
-import React, {memo} from 'react';
+import React, {memo, useMemo} from 'react';
 import {StyleSheet, View} from 'react-native';
 import {Dropdown} from 'react-native-element-dropdown';
 import {Paragraph} from '@/components/shared/Paragraph';
 import {useAppDispatch, useAppSelector} from '@/state/hooks';
-import {appColors} from '@/constants/Colors';
-import {selectSalon} from '@/state/reducers/SalonsSlice';
+import {appColors} from '@/lib/constants/Colors';
 import Arrow from '@/assets/icons/ChevronDownGray.svg';
+import {selectSalonForOrder} from '@/state/reducers/OrderSlice';
 
-type Props = {};
+type Props = Record<string, never>;
 
 const DropdownElement = ({
   title,
   value,
+  id,
 }: {
   title?: string;
   value?: string;
   selected?: boolean;
+  id?: number;
 }) => {
+  const masters = useAppSelector(state => state.MastersReducer.masters);
+  const service = useAppSelector(state => state.OrderReducer.service);
+
+  const {isActive} = useMemo(() => {
+    if (!service) {
+      return {isActive: true};
+    }
+
+    let isMasters = masters.some(master => {
+      const isService = master?.attributeValues?.master_services?.value?.some(
+        (value: Record<any, any>) => {
+          const qualified = service?.localizeInfos?.title === value?.title;
+          if (qualified) {
+            return qualified;
+          }
+        },
+      );
+
+      if (isService) {
+        return master?.attributeValues?.master_salon?.value.some(
+          (value: Record<any, any>) => {
+            const qualified = value.id === id;
+            return qualified;
+          },
+        );
+      }
+
+      return isService;
+    });
+
+    return {isActive: isMasters};
+  }, [masters, service, id]);
+
   return (
     <View className={'px-5 py-2.5'}>
-      <Paragraph color={'dark'} size={16}>
+      <Paragraph color={isActive ? 'dark' : 'gray'} size={16}>
         {title?.toUpperCase()}
       </Paragraph>
       <Paragraph size={13}>{value}</Paragraph>
@@ -27,9 +62,11 @@ const DropdownElement = ({
   );
 };
 
-const SalonPicker: React.FC<Props> = ({}) => {
-  const {salons, selectedSalonIndex} = useAppSelector(
-    state => state.SalonsReducer,
+const SalonPicker: React.FC<Props> = () => {
+  const {salons} = useAppSelector(state => state.SalonsReducer);
+  const selectedSalon = useAppSelector(state => state.OrderReducer.salon);
+  const {select_salon_text} = useAppSelector(
+    state => state.SystemContentReducer.content,
   );
   const dispatch = useAppDispatch();
 
@@ -40,18 +77,21 @@ const SalonPicker: React.FC<Props> = ({}) => {
     };
   });
 
+  const selectedSalonIndex = selectedSalon
+    ? salons.findIndex(salon => salon.id === selectedSalon.id)
+    : -1;
+
   const onChange = (item: number) => {
-    console.log(item);
     // @ts-ignore
-    dispatch(selectSalon(item?._index));
+    dispatch(selectSalonForOrder(salons[item?._index]));
   };
 
   return (
     <Dropdown
-      placeholder={'Salon choosing'}
+      placeholder={select_salon_text}
       // @ts-ignore
       data={data}
-      value={selectedSalonIndex?.toString() || ''}
+      value={selectedSalonIndex >= 0 ? selectedSalonIndex.toString() : ''}
       onChange={onChange}
       // @ts-ignore
       labelField="label"
@@ -70,7 +110,10 @@ const SalonPicker: React.FC<Props> = ({}) => {
         return (
           <DropdownElement
             title={item.label}
-            value={salons[index]?.attributeValues?.salon_address?.value || 'dd'}
+            value={
+              salons[index]?.attributeValues?.salon_address?.value || 'no value'
+            }
+            id={salons[index]?.id}
           />
         );
       }}

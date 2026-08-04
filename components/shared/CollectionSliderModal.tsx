@@ -1,9 +1,9 @@
 import React, {Dispatch, useRef} from 'react';
-import {Modal, StyleSheet, TouchableOpacity, View} from 'react-native';
-import Carousel, {ICarouselInstance} from 'react-native-reanimated-carousel';
+import {Modal, Platform, StyleSheet, TouchableOpacity, View} from 'react-native';
+import {Carousel, CarouselRef} from 'react-native-reanimated-carousel';
 import {Screen} from '@/components/shared/Screen';
 import CustomImage from '@/components/shared/CustomImage';
-import {layoutWidth} from '@/constants/sizes';
+import {layoutWidth} from '@/lib/constants/sizes';
 import ArrowLeft from '@/assets/icons/Arrow.svg';
 import X from '@/assets/icons/x.svg';
 
@@ -23,7 +23,7 @@ const CollectionSliderModal: React.FC<Props> = ({
   items,
   defaultIndex,
 }) => {
-  const ref = useRef<ICarouselInstance>(null);
+  const ref = useRef<CarouselRef | null>(null);
 
   return (
     <Modal
@@ -34,11 +34,9 @@ const CollectionSliderModal: React.FC<Props> = ({
         edges={['horizontal']}
         style={{
           backgroundColor: 'rgba(147, 66, 149, 0.9)',
-          height: '100%',
-          width: '100%',
           alignItems: 'center',
+          height: '100%',
           justifyContent: 'center',
-          alignSelf: 'center',
           gap: 10,
         }}>
         <View className={'w-full justify-end items-end'}>
@@ -50,14 +48,14 @@ const CollectionSliderModal: React.FC<Props> = ({
         </View>
         <View style={{height: 520}}>
           <Carousel
-            ref={ref}
+            ref={ref as React.Ref<CarouselRef>}
             loop={false}
-            autoPlay={false}
-            height={520}
-            width={layoutWidth}
+            autoplay={false}
+            itemSize={layoutWidth}
+            style={{height: 520, width: layoutWidth}}
             data={items}
             defaultIndex={defaultIndex}
-            renderItem={({item}) => (
+            renderItem={({item}: {item: (typeof items)[number]}) => (
               <CustomImage
                 uri={item.downloadLink}
                 height={520}
@@ -68,11 +66,13 @@ const CollectionSliderModal: React.FC<Props> = ({
           />
         </View>
         <View className={'justify-between items-start flex-row w-full mt-2.5'}>
-          <TouchableOpacity onPress={() => ref.current?.prev()}>
+          <TouchableOpacity
+            className={'p-2'}
+            onPress={() => ref.current?.prev()}>
             <ArrowLeft />
           </TouchableOpacity>
           <TouchableOpacity
-            className={'-scale-x-100'}
+            className={'-scale-x-100 p-2'}
             onPress={() => ref.current?.next()}>
             <ArrowLeft />
           </TouchableOpacity>
@@ -82,17 +82,4 @@ const CollectionSliderModal: React.FC<Props> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  closeModalContainer: {
-    alignItems: 'flex-end',
-    justifyContent: 'flex-end',
-    width: '100%',
-    paddingBottom: 10,
-  },
-
-  img: {
-    height: 520,
-    width: '100%',
-  },
-});
 export default CollectionSliderModal;

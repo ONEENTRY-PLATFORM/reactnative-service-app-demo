@@ -1,6 +1,6 @@
 import React, {Dispatch, memo, useContext, useEffect} from 'react';
 import {Alert, Keyboard, View} from 'react-native';
-import {useRoute} from '@react-navigation/native';
+import {useRoute} from "expo-router/react-navigation";
 import {IError} from 'oneentry/dist/base/utils';
 import useTextManager from './hooks/useTextManager';
 import {useAppSelector} from '@/state/hooks';
@@ -8,8 +8,8 @@ import CustomButton from '@/components/shared/CustomButton';
 import {Redirect, router, useLocalSearchParams} from 'expo-router';
 import {useActivateMeMutation} from '@/api';
 import {useAuth} from '@/state/contexts/AuthContext';
-import {api} from '@/api/defineApi';
 import {useHistoryContext} from '@/state/contexts/HistoryProvider';
+import {api} from '@/api/defineApi';
 
 type Props = {
   setValue: Dispatch<string>;
@@ -42,14 +42,19 @@ const OtpKeyboard: React.FC<Props> = ({setValue, value}) => {
       }
 
       if (params.event === 'reset') {
-        const result = await api.AuthProvider.checkCode(
-          'email',
-          params.identifier as string,
-          value,
+        // const result = await api.AuthProvider.checkCode(
+        //   'generate_otp',
+        //   params.identifier as string,
+        //   value,
+        // );
+        //
+        // if ((result as IError)?.statusCode >= 400) {
+        //   throw new Error((result as IError)?.message);
+        // }
+
+        router.navigate(
+          `/auth/new_password?code=${value}&identifier=${params.identifier}&marker=${params.method || 'email'}`,
         );
-        if ((result as IError)?.statusCode >= 400) {
-          throw new Error((result as IError)?.message);
-        }
       }
     } catch (e: any) {
       Alert.alert(e.message);
@@ -77,7 +82,7 @@ const OtpKeyboard: React.FC<Props> = ({setValue, value}) => {
       <Redirect
         // @ts-ignore
         href={
-          lastVisitedTab ? `/(tabs)/${lastVisitedTab}` : '/(tabs)/home_mobile'
+          lastVisitedTab ? `/(tabs)/${lastVisitedTab}` : '/(tabs)/home'
         }
       />
     );

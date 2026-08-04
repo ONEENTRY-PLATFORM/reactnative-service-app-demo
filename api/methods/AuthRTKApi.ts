@@ -19,8 +19,7 @@ export const AuthRTKApi = RTKApi.injectEndpoints({
 
           return {data: result as ISignUpEntity};
         } catch (e: any) {
-          console.warn('=>(RTKApi.ts:28) e', e);
-          return {error: e.message};
+          return {error: e};
         }
       },
     }),
@@ -31,13 +30,11 @@ export const AuthRTKApi = RTKApi.injectEndpoints({
     >({
       queryFn: async ({marker, event, identifier}) => {
         try {
-          console.log(marker + event + identifier);
           const result = await api.AuthProvider.generateCode(
             marker,
             identifier,
             event,
           );
-
 
           if ((result as IError)?.statusCode >= 400) {
             throw new Error((result as IError)?.message);
@@ -70,6 +67,48 @@ export const AuthRTKApi = RTKApi.injectEndpoints({
           return {data: true};
         } catch (e: any) {
           console.warn('=>(RTKApi.ts:28) e', e);
+          return {error: e.message};
+        }
+      },
+    }),
+
+    resetPassword: builder.mutation<
+      boolean,
+      {
+        marker: string;
+        identifier: string;
+        code: string;
+        password: string;
+        eventIdentifier?: string;
+        type?: number;
+      }
+    >({
+      queryFn: async ({
+        marker,
+        code,
+        identifier,
+        password,
+        eventIdentifier = 'reset_password',
+        type = 2,
+      }) => {
+        try {
+          const result = await api.AuthProvider.changePassword(
+            marker,
+            identifier,
+            eventIdentifier,
+            type,
+            code,
+            password,
+            password,
+          );
+
+          if ((result as IError)?.statusCode >= 400) {
+            throw new Error((result as IError)?.message);
+          }
+
+          return {data: true};
+        } catch (e: any) {
+          console.warn('=>(RTKApi.ts:96) e', e);
           return {error: e.message};
         }
       },

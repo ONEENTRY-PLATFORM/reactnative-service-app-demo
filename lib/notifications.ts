@@ -2,15 +2,17 @@ import {useEffect, useRef, useState} from 'react';
 import * as Notifications from 'expo-notifications';
 import {Platform} from 'react-native';
 import messaging from '@react-native-firebase/messaging';
-import {SchedulableTriggerInputTypes} from 'expo-notifications/src/Notifications.types';
+import Toast from 'react-native-toast-message';
 
 export const useNotifications = () => {
   const [expoPushToken, setExpoPushToken] = useState('');
   const [shouldSchedule, setShouldSchedule] = useState(true);
-  const notificationListener = useRef<Notifications.EventSubscription>();
-  const responseListener = useRef<Notifications.EventSubscription>();
+
+  const notificationListener = useRef<Notifications.EventSubscription>(null);
+  const responseListener = useRef<Notifications.EventSubscription>(null);
 
   useEffect(() => {
+    // Register the device for push notifications and retrieve the push token for Firebase.
     registerForPushNotificationsAsync().then(
       token => token && setExpoPushToken(token),
     );
@@ -18,41 +20,34 @@ export const useNotifications = () => {
     if (Platform.OS === 'android') {
       Notifications.getNotificationChannelsAsync().then();
     }
+
+    /**
+     * Adds a listener for incoming notifications.
+     *
+     * Note: When the app is open, notifications do not appear as system alerts.
+     * Instead, they are routed to this listener. It is our responsibility
+     * to handle how the notification should be displayed. In this case,
+     * we schedule the notification manually to ensure it is shown to the user.
+     */
     notificationListener.current =
       Notifications.addNotificationReceivedListener(async notification => {
         if (shouldSchedule) {
-          await Notifications.scheduleNotificationAsync({
-            content: {
-              title: notification.request.content.title,
-              body: notification.request.content.body,
-            },
-            trigger: {
-              type: SchedulableTriggerInputTypes.TIME_INTERVAL,
-              repeats: false,
-              seconds: 1,
-            },
+          Toast.show({
+            text1: notification.request.content.title || '',
+            text2: notification.request.content.body || '',
+            type: 'success',
           });
-
-          setShouldSchedule(false);
-
-          setTimeout(() => setShouldSchedule(true), 5000);
         }
       });
 
     responseListener.current =
-      Notifications.addNotificationResponseReceivedListener(response => {
-        console.log(response);
-      });
+      Notifications.addNotificationResponseReceivedListener(response => {});
 
     return () => {
-      notificationListener.current &&
-        Notifications.removeNotificationSubscription(
-          notificationListener.current,
-        );
-      responseListener.current &&
-        Notifications.removeNotificationSubscription(responseListener.current);
+      notificationListener.current?.remove();
+      responseListener.current?.remove();
     };
-  }, []);
+  }, [shouldSchedule]);
 
   return {
     token: expoPushToken,
@@ -71,7 +66,6 @@ async function registerForPushNotificationsAsync() {
     });
   }
 
-
   const {status: existingStatus} = await Notifications.getPermissionsAsync();
   let finalStatus = existingStatus;
   if (existingStatus !== 'granted') {
@@ -85,7 +79,6 @@ async function registerForPushNotificationsAsync() {
 
   try {
     token = (await Notifications.getDevicePushTokenAsync()).data;
-    console.log(token);
     if (Platform.OS === 'ios') {
       await messaging().setAPNSToken(token);
       token = await messaging().getToken();
@@ -93,7 +86,6 @@ async function registerForPushNotificationsAsync() {
   } catch (e) {
     console.warn(e);
   }
-
 
   return token;
 }

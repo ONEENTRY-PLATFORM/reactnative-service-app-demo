@@ -13,7 +13,6 @@ type Props = {
 };
 
 const SignUpButton: React.FC<Props> = ({inputs}) => {
-  const {bottom} = useSafeAreaInsets();
   const [signUp, {isLoading, error, data}] = useSignUpMutation();
   const {signIn, isLoading: isLoadingAuth} = useAuth();
   const {sign_up_text, incorrect_inputs_text} = useAppSelector(
@@ -97,7 +96,7 @@ const SignUpButton: React.FC<Props> = ({inputs}) => {
           login: data.identifier,
           password: inputs?.password_reg.value,
         });
-        router.navigate('/(tabs)/home_mobile');
+        router.navigate('/(tabs)/home');
       } else {
         //If activation required, navigate to activation screen
         router.navigate(
@@ -113,13 +112,7 @@ const SignUpButton: React.FC<Props> = ({inputs}) => {
 
   return (
     <>
-      <CustomButton
-        style={{position: 'absolute', alignSelf: 'center', bottom: bottom}}
-        isLoading={isLoading || isLoadingAuth}
-        disabled={!isValid}
-        title={sign_up_text?.toUpperCase()}
-        onPress={onSubmit}
-      />
+
     </>
   );
 };
