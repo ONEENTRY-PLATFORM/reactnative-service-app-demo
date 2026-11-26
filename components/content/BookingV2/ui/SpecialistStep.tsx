@@ -138,7 +138,7 @@ const SpecialistStep: React.FC<Props> = ({
                 </View>
               ) : null}
             </TouchableOpacity>
-          ) : null
+          ) : undefined
         }
         renderItem={({item}) => {
           const isPicked = item.id === selected;

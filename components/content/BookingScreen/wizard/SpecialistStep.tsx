@@ -9,6 +9,12 @@ import SectionTitle from '@/components/shared/SectionTitle';
 import {selectMasterForOrder} from '@/state/reducers/OrderSlice';
 import {appColors} from '@/lib/constants/Colors';
 import {IAdminEntity} from 'oneentry/dist/admins/adminsInterfaces';
+import {
+  attrEntries,
+  attrFileUrl,
+  attrNumber,
+  attrText,
+} from '@/lib/oneentry/attributes';
 
 // Wizard step 3. Cross-filter (salon ∩ service) — matches the web
 // SpecialistStep, minus the "Any specialist" affordance (the RN order shape
@@ -30,9 +36,12 @@ const SpecialistStep = ({onSelected}: Props) => {
   const filtered = useMemo(() => {
     if (!service && !salon) return masters;
     return masters.filter(m => {
-      const services: {title?: string}[] = m.attributeValues?.master_services?.value ?? [];
-      const masterSalons: {id?: number}[] =
-        m.attributeValues?.master_salon?.value ?? [];
+      const services = attrEntries<{title?: string}>(
+        m.attributeValues?.master_services,
+      );
+      const masterSalons = attrEntries<{id?: number}>(
+        m.attributeValues?.master_salon,
+      );
       const providesService = service
         ? services.some(v => v?.title === service?.localizeInfos?.title)
         : true;
@@ -65,9 +74,9 @@ const SpecialistStep = ({onSelected}: Props) => {
       contentContainerStyle={{gap: 12, paddingBottom: 40}}
       renderItem={({item}) => {
         const isPicked = selectedMaster?.id === item.id;
-        const image = item.attributeValues?.master_image?.value?.[0]?.downloadLink;
-        const name = item.attributeValues?.master_name?.value;
-        const rating = Number(item.attributeValues?.master_rating?.value ?? 0);
+        const image = attrFileUrl(item.attributeValues?.master_image);
+        const name = attrText(item.attributeValues?.master_name);
+        const rating = attrNumber(item.attributeValues?.master_rating) ?? 0;
         return (
           <CardBase
             outline

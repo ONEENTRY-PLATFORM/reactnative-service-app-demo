@@ -3,7 +3,8 @@ import {useGetFormByMarkerQuery, useSignUpMutation} from '@/api';
 import {IAttributes, IError} from 'oneentry/dist/base/utils';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-controller';
 import CustomInput from '@/components/shared/CustomInput';
-import {Alert, StyleSheet, TextInput, View} from 'react-native';
+import {Alert, StyleSheet, View} from 'react-native';
+import type {TextInputInstance} from 'react-native';
 import {Paragraph} from '@/components/shared/Paragraph';
 import {useAppSelector} from '@/state/hooks';
 import Footer from '@/components/shared/Footer';
@@ -32,7 +33,7 @@ const SignUpForm: React.FC<Props> = ({}) => {
   const {sign_up_text, welcome_message_text} = useAppSelector(
     state => state.SystemContentReducer.content,
   );
-  const inputRefs = useRef<React.RefObject<TextInput>[]>([]);
+  const inputRefs = useRef<React.RefObject<TextInputInstance | null>[]>([]);
 
   const onSubmit = async (inputs: any) => {
     const formData = Object.entries(inputs).reduce(

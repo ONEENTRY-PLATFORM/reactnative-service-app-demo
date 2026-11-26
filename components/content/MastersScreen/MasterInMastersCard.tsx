@@ -1,6 +1,12 @@
 import React from 'react';
 import CardBase from '@/components/shared/CardBase';
 import {IAdminEntity} from 'oneentry/dist/admins/adminsInterfaces';
+import {
+  attrFileUrl,
+  attrNumber,
+  attrRichText,
+  attrText,
+} from '@/lib/oneentry/attributes';
 import CustomImage from '@/components/shared/CustomImage';
 import {View} from 'react-native';
 import {Paragraph} from '@/components/shared/Paragraph';
@@ -54,30 +60,29 @@ const MasterInMastersCard: React.FC<Props> = ({master, role}) => {
         width={136}
         className={'rounded-lg'}
         style={{objectFit: 'cover'}}
-        uri={master?.attributeValues?.master_image?.value[0]?.downloadLink}
+        uri={attrFileUrl(master?.attributeValues?.master_image)}
       />
       <View className={'flex-1 py-2 justify-between'}>
         <View className={'gap-2.5'}>
           <View className={'gap-0.5'}>
             <Paragraph className={'leading-[18px]'} color={'dark'} size={18}>
-              {master?.attributeValues?.master_name?.value}
+              {attrText(master?.attributeValues?.master_name)}
             </Paragraph>
             <Paragraph color={'primary'} size={12}>
-              {role + ' ' + master_text}
+              {master_text ? `${role} ${master_text}` : role}
             </Paragraph>
           </View>
           <Rating
             color={'#0EDEFB'}
             shorten={false}
-            rating={master?.attributeValues?.master_rating?.value}
+            rating={attrNumber(master?.attributeValues?.master_rating) ?? 0}
           />
           <Paragraph
             className={'w-full'}
             color={'gray'}
             numberOfLines={3}
             size={12}>
-            {master?.attributeValues?.master_description?.value[0]
-              ?.plainValue || ''}
+            {attrRichText(master?.attributeValues?.master_description)}
           </Paragraph>
         </View>
         <Link

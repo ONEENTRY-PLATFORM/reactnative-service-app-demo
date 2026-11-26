@@ -1,6 +1,7 @@
 import {createSlice, PayloadAction} from '@reduxjs/toolkit';
 import {IAdminEntity} from 'oneentry/dist/admins/adminsInterfaces';
 import {RootState} from '@/state/store';
+import {attrEntries} from '@/lib/oneentry/attributes';
 
 type initialStateType = {
   masters: IAdminEntity[];
@@ -33,11 +34,10 @@ export const getMasterById = (state: RootState, id: number) => {
 
 export const isMastersInSalon = (state: RootState, id?: number): boolean => {
   return id
-    ? state.MastersReducer.masters?.some(
-        master =>
-          master.attributeValues?.master_salon?.value?.some(
-            (salon: any) => id === salon.id,
-          ) || [],
+    ? state.MastersReducer.masters?.some(master =>
+        attrEntries<any>(master.attributeValues?.master_salon).some(
+          (salon: any) => id === salon.id,
+        ),
       )
     : false;
 };

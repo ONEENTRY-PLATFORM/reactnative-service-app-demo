@@ -3,7 +3,7 @@ import CardBase from '@/components/shared/CardBase';
 import CustomImage from '@/components/shared/CustomImage';
 import {Paragraph} from '@/components/shared/Paragraph';
 import Rating from '@/components/shared/Rating';
-import {Alert, View} from 'react-native';
+import {Alert, TouchableOpacity, View} from 'react-native';
 import CustomButton from '@/components/shared/CustomButton';
 import {useAppDispatch, useAppSelector} from '@/state/hooks';
 import {Link, router, useLocalSearchParams} from 'expo-router';
@@ -15,7 +15,15 @@ import {
 import {setBookingPrefill} from '@/state/reducers/BookingPrefillSlice';
 import {IAdminEntity} from 'oneentry/dist/admins/adminsInterfaces';
 import {IPagesEntity} from 'oneentry/dist/pages/pagesInterfaces';
+import {
+  attrEntries,
+  attrFileUrl,
+  attrNumber,
+  attrText,
+} from '@/lib/oneentry/attributes';
 import SalonSelectionModal from './SalonSelectionModal';
+import {useMasterReviews} from '@/lib/oneentry/reviews';
+import {useAuth} from '@/state/contexts/AuthContext';
 
 type Props = {
   master?: IAdminEntity;
@@ -35,6 +43,19 @@ const MasterPortfolioCard: React.FC<Props> = ({master, role, id}) => {
   const selectedSalon = useAppSelector(state => state.OrderReducer.salon);
   const allSalons = useAppSelector(state => state.SalonsReducer.salons);
   const [showSalonModal, setShowSalonModal] = useState(false);
+  const {user} = useAuth();
+  const {reviews, loading: reviewsLoading} = useMasterReviews(master?.id);
+
+  // Reviews are tied to a customer account, so guests sign in first.
+  const onLeaveReview = () => {
+    if (!user) {
+      router.navigate('/auth/sign_in');
+      return;
+    }
+    router.navigate(
+      `/(tabs)/masters/reviews?master=${params.master}&role=${role ?? ''}&action=leave`,
+    );
+  };
 
   const masterSalons = useMemo(() => {
     if (!master?.attributeValues?.master_salon?.value) {
@@ -44,8 +65,8 @@ const MasterPortfolioCard: React.FC<Props> = ({master, role, id}) => {
     // the linked page id lives in `entry.value.id`, not `entry.id`. Reading
     // the wrong field returned [undefined] and made every master look like it
     // had no salons.
-    const masterSalonIds = (
-      master.attributeValues.master_salon.value as any[]
+    const masterSalonIds = attrEntries<any>(
+      master.attributeValues.master_salon,
     )
       .map(entry => entry?.value?.id ?? entry?.id)
       .filter((id): id is number => typeof id === 'number');
@@ -110,42 +131,44 @@ const MasterPortfolioCard: React.FC<Props> = ({master, role, id}) => {
               flex: 1,
               aspectRatio: 136 / 158,
             }}
-            uri={master?.attributeValues?.master_image?.value[0]?.downloadLink}
+            uri={attrFileUrl(master?.attributeValues?.master_image)}
           />
         </View>
         <View className={'justify-between'}>
           <View className={'gap-y-2'}>
             <Paragraph color={'dark'} size={18}>
-              {master?.attributeValues?.master_name?.value}
+              {attrText(master?.attributeValues?.master_name)}
             </Paragraph>
             {role && (
               <Paragraph color={'primary'} weight={'600'} size={12}>
-                {role + ' ' + master_text}
+                {master_text ? `${role} ${master_text}` : role}
               </Paragraph>
             )}
             <Paragraph color={'dark'} size={12}>
-              {master_experience_text + ' '}
+              {(master_experience_text || 'Experience:') + ' '}
               <Paragraph color={'primary'} size={12}>
-                {master?.attributeValues?.master_expirience?.value}
+                {attrText(master?.attributeValues?.master_expirience)}
               </Paragraph>
             </Paragraph>
             <View className={'flex-row items-center flex-wrap gap-x-3 gap-y-1'}>
               <Rating
                 color={'#0EDEFB'}
                 shorten={false}
-                rating={master?.attributeValues?.master_rating?.value}
+                rating={attrNumber(master?.attributeValues?.master_rating) ?? 0}
               />
               <Link
                 href={`/(tabs)/masters/reviews?master=${params.master}&role=${role ?? ''}`}>
                 <View className={'flex-row items-center gap-2'}>
                   <Reviews />
-                  <Paragraph color={'dark'} size={18} weight={'400'}>
-                    1
-                  </Paragraph>
+                  {/* Hidden while loading so a stale 0 never flashes. */}
+                  {!reviewsLoading && (
+                    <Paragraph color={'dark'} size={18} weight={'400'}>
+                      {reviews.length}
+                    </Paragraph>
+                  )}
                 </View>
               </Link>
-              <Link
-                href={`/(tabs)/masters/reviews?master=${params.master}&role=${role ?? ''}&action=leave`}>
+              <TouchableOpacity onPress={onLeaveReview} hitSlop={6}>
                 <Paragraph
                   color={'primary'}
                   size={13}
@@ -153,7 +176,7 @@ const MasterPortfolioCard: React.FC<Props> = ({master, role, id}) => {
                   style={{textDecorationLine: 'underline'}}>
                   {leave_review_text || 'Leave a review'}
                 </Paragraph>
-              </Link>
+              </TouchableOpacity>
             </View>
           </View>
           <CustomButton

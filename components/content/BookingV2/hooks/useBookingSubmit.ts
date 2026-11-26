@@ -137,7 +137,9 @@ export const useBookingSubmit = ({
         const originalProducts = ((current as any).products ?? []).map(
           (p: any) => ({productId: p.id, quantity: p.quantity ?? 1}),
         );
-        const cancelBody: IOrderData = {
+        // `statusIdentifier` is accepted by updateOrderByMarkerAndId but not
+        // declared on IOrderData, so the body type carries it explicitly.
+        const cancelBody: IOrderData & {statusIdentifier: string} = {
           ...(current as unknown as IOrderData),
           products: originalProducts.length > 0 ? originalProducts : products,
           statusIdentifier: 'canceled',

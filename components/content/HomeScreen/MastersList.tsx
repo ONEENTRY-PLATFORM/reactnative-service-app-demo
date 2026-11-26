@@ -1,6 +1,7 @@
 import React from 'react';
 import {FlatList, StyleSheet, View} from 'react-native';
 import {IAdminEntity} from 'oneentry/dist/admins/adminsInterfaces';
+import {getAttributeFile} from 'oneentry';
 import {router} from 'expo-router';
 import CardBase from '@/components/shared/CardBase';
 import CustomImage from '@/components/shared/CustomImage';
@@ -16,7 +17,8 @@ const CARD_WIDTH = 150;
 const CARD_HEIGHT = 200;
 
 const MasterCard = ({master}: {master: IAdminEntity}) => {
-  const image = master?.attributeValues?.master_image?.value?.[0]?.downloadLink;
+  const image = getAttributeFile(master?.attributeValues?.master_image)
+    ?.downloadLink;
   const name = (master?.attributeValues?.master_name?.value ?? '') as string;
   const rating = Number(master?.attributeValues?.master_rating?.value ?? 0);
   return (

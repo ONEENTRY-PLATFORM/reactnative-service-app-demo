@@ -2,7 +2,7 @@ import {useState} from 'react';
 import {router} from 'expo-router';
 import Toast from 'react-native-toast-message';
 import CustomButton from '@/components/shared/CustomButton';
-import {runGoogleAuth, useGoogleAuthRequest} from '@/lib/googleOAuth';
+import {isGoogleSignInConfigured, runGoogleAuth} from '@/lib/googleOAuth';
 import {useAuth} from '@/state/contexts/AuthContext';
 
 type Props = {
@@ -10,14 +10,16 @@ type Props = {
 };
 
 const GoogleSignInButton = ({title}: Props) => {
-  const {request, promptAsync} = useGoogleAuthRequest();
   const {authenticate} = useAuth();
   const [busy, setBusy] = useState(false);
+
+  // A button that does nothing got the app rejected (App Store 2.1(a)).
+  if (!isGoogleSignInConfigured()) return null;
 
   const onPress = async () => {
     setBusy(true);
     try {
-      const outcome = await runGoogleAuth(request, promptAsync);
+      const outcome = await runGoogleAuth();
       if (!outcome.ok) {
         if (outcome.reason !== 'cancelled') {
           Toast.show({
@@ -40,7 +42,7 @@ const GoogleSignInButton = ({title}: Props) => {
   return (
     <CustomButton
       isInline
-      disabled={!request || busy}
+      disabled={busy}
       isLoading={busy}
       onPress={onPress}
       title={title}

@@ -1,77 +1,103 @@
-import * as AuthSession from 'expo-auth-session';
-import * as WebBrowser from 'expo-web-browser';
-import {useEffect} from 'react';
-import {api, storage} from '@/api/defineApi';
+import {
+  GoogleSignin,
+  isErrorWithCode,
+  statusCodes,
+} from '@react-native-google-signin/google-signin';
+import {api, AUTH_PROVIDER_KEY, storage} from '@/api/defineApi';
 import {IAuthEntity} from 'oneentry/dist/auth-provider/authProvidersInterfaces';
 import {IError} from 'oneentry/dist/base/utils';
 
-// Must be called once before any OAuth flow to unlock the browser modal on
-// iOS Safari view controllers. Safe to call multiple times.
-WebBrowser.maybeCompleteAuthSession();
-
-const GOOGLE_DISCOVERY: AuthSession.DiscoveryDocument = {
-  authorizationEndpoint: 'https://accounts.google.com/o/oauth2/v2/auth',
-  tokenEndpoint: 'https://oauth2.googleapis.com/token',
-  revocationEndpoint: 'https://oauth2.googleapis.com/revoke',
-};
-
-const CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID;
+// Native Google Sign-In (Credential Manager on Android, Google Sign-In SDK on
+// iOS). The OAuth clients live in the Google Cloud project behind your
+// Firebase project: a web client, an iOS client and one Android
+// client per signing certificate (Play signing, upload key, debug).
+//
+// The sign-in returns a one-time `serverAuthCode` issued for the WEB client;
+// OneEntry's `google` provider exchanges it for the profile. OneEntry expects
+// the client secret in that request (the web storefront makes the same call
+// from a server action), and this app has no backend of its own, so the
+// secret ships in the build — a known trade-off of the platform's flow.
+const WEB_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID;
+const IOS_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID;
 const CLIENT_SECRET = process.env.EXPO_PUBLIC_GOOGLE_CLIENT_SECRET;
 
-// Google requires the redirect URI to match one whitelisted in the Cloud
-// Console. In Expo Go dev builds this resolves to a proxy URL, in a native
-// build to `myapp://…` (from app.json scheme). Both must be added to the
-// authorized redirect list of the OAuth client.
-export const getRedirectUri = () =>
-  AuthSession.makeRedirectUri({
-    scheme: 'myapp',
-    path: 'auth/callback/google',
+/** Whether this build carries a Google OAuth configuration. */
+export const isGoogleSignInConfigured = (): boolean =>
+  Boolean(WEB_CLIENT_ID && IOS_CLIENT_ID && CLIENT_SECRET);
+
+let configured = false;
+const ensureConfigured = () => {
+  if (configured) return;
+  GoogleSignin.configure({
+    webClientId: WEB_CLIENT_ID,
+    iosClientId: IOS_CLIENT_ID,
+    // Required for `serverAuthCode`.
+    offlineAccess: true,
+    scopes: ['email', 'profile'],
   });
+  configured = true;
+};
 
 export type GoogleOAuthOutcome =
   | {ok: true; auth: IAuthEntity}
-  | {ok: false; reason: 'cancelled' | 'no_code' | 'exchange_failed'; error?: IError};
+  | {
+      ok: false;
+      reason: 'unsupported' | 'cancelled' | 'no_code' | 'exchange_failed';
+      error?: IError;
+    };
 
-/**
- * Runs the Google OAuth flow end-to-end and exchanges the resulting code for
- * an IAuthEntity via OneEntry's AuthProvider.oauth.
- *
- * WARNING: OneEntry's oauth() method wants a client_secret in the request
- * body. In the web build (nextjs-beauty) that call is made from a Server
- * Action so the secret never reaches the browser. In this RN build the
- * secret is read from EXPO_PUBLIC_GOOGLE_CLIENT_SECRET, which means it will
- * be bundled into the client. This is a KNOWN limitation of running the
- * OneEntry OAuth exchange on-device without a backend proxy. See
- * WEB_PARITY_PLAN.md § "Этап 4" for the backend-proxy alternative.
- */
-export async function runGoogleAuth(
-  request: AuthSession.AuthRequest | null,
-  promptAsync: () => Promise<AuthSession.AuthSessionResult>,
-): Promise<GoogleOAuthOutcome> {
-  if (!request || !CLIENT_ID || !CLIENT_SECRET) {
-    return {ok: false, reason: 'no_code'};
+const failure = (message: string): IError => ({
+  statusCode: 500,
+  message,
+  timestamp: new Date().toISOString(),
+  pageData: null,
+});
+
+export async function runGoogleAuth(): Promise<GoogleOAuthOutcome> {
+  if (!isGoogleSignInConfigured()) {
+    return {ok: false, reason: 'unsupported'};
   }
+  ensureConfigured();
 
-  const result = await promptAsync();
-
-  if (result.type !== 'success') {
-    return {ok: false, reason: 'cancelled'};
+  let code: string | null = null;
+  try {
+    await GoogleSignin.hasPlayServices({showPlayServicesUpdateDialog: true});
+    // Always show the account chooser: a cached account would skip it, and the
+    // user could not switch accounts after signing out.
+    await GoogleSignin.signOut().catch(() => undefined);
+    const response = await GoogleSignin.signIn();
+    if (response.type !== 'success') {
+      return {ok: false, reason: 'cancelled'};
+    }
+    code = response.data.serverAuthCode;
+  } catch (e) {
+    if (
+      isErrorWithCode(e) &&
+      (e.code === statusCodes.SIGN_IN_CANCELLED ||
+        e.code === statusCodes.IN_PROGRESS)
+    ) {
+      return {ok: false, reason: 'cancelled'};
+    }
+    return {
+      ok: false,
+      reason: 'exchange_failed',
+      error: failure((e as Error)?.message ?? 'Google sign-in failed'),
+    };
   }
-
-  const code = result.params.code;
   if (!code) {
     return {ok: false, reason: 'no_code'};
   }
 
   try {
     const authResult = await api.AuthProvider.oauth('google', {
-      client_id: CLIENT_ID,
-      client_secret: CLIENT_SECRET,
+      client_id: WEB_CLIENT_ID as string,
+      client_secret: CLIENT_SECRET as string,
       code,
       grant_type: 'authorization_code',
-      redirect_uri: request.redirectUri,
+      // A server auth code from the native SDKs is exchanged without a
+      // redirect URI.
+      redirect_uri: '',
     });
-
     if ((authResult as IError)?.statusCode >= 400) {
       return {
         ok: false,
@@ -79,48 +105,36 @@ export async function runGoogleAuth(
         error: authResult as IError,
       };
     }
-
     const auth = authResult as IAuthEntity;
+    if (!auth.accessToken) {
+      return {
+        ok: false,
+        reason: 'exchange_failed',
+        error: failure('OAuth succeeded but no access token was returned'),
+      };
+    }
+    // `oauth()` does not put the tokens into the SDK state (unlike `auth()`),
+    // see lib/appleOAuth.ts.
+    api.AuthProvider.setAccessToken(auth.accessToken);
     if (auth.refreshToken) {
+      api.AuthProvider.setRefreshToken(auth.refreshToken);
       storage.set('refresh', auth.refreshToken);
     }
+    // Logout is per provider — remember which one opened this session.
+    storage.set(AUTH_PROVIDER_KEY, 'google');
     return {ok: true, auth};
-  } catch (e: any) {
+  } catch (e) {
     return {
       ok: false,
       reason: 'exchange_failed',
-      error: {
-        statusCode: 500,
-        message: e?.message ?? 'oauth exchange threw',
-        timestamp: new Date().toISOString(),
-        pageData: null,
-      },
+      error: failure((e as Error)?.message ?? 'OAuth exchange threw'),
     };
   }
 }
 
-// Convenience hook — mirrors the shape of AuthSession.useAuthRequest so
-// callers can just spread the return value.
-export function useGoogleAuthRequest() {
-  const redirectUri = getRedirectUri();
-  const [request, response, promptAsync] = AuthSession.useAuthRequest(
-    {
-      clientId: CLIENT_ID ?? '',
-      scopes: ['openid', 'email', 'profile'],
-      redirectUri,
-      responseType: AuthSession.ResponseType.Code,
-    },
-    GOOGLE_DISCOVERY,
-  );
-
-  // Log when the OAuth client is misconfigured to help debugging.
-  useEffect(() => {
-    if (!CLIENT_ID) {
-      console.warn(
-        '[oauth] EXPO_PUBLIC_GOOGLE_CLIENT_ID not set — Google sign-in will fail',
-      );
-    }
-  }, []);
-
-  return {request, response, promptAsync, redirectUri};
+/** Forget the cached Google account so the next sign-in shows the chooser. */
+export async function signOutOfGoogle(): Promise<void> {
+  if (!isGoogleSignInConfigured()) return;
+  ensureConfigured();
+  await GoogleSignin.signOut().catch(() => undefined);
 }

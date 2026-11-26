@@ -425,7 +425,9 @@ const OrderCard: React.FC<{
             try {
               // Try the plain status update first — succeeds for cash and
               // for orders that have no payment session attached.
-              const body: IOrderData = {
+              // `statusIdentifier` is accepted by the endpoint but not
+              // declared on IOrderData — see useBookingSubmit.
+              const body: IOrderData & {statusIdentifier: string} = {
                 ...(order as unknown as IOrderData),
                 products: ((order as any).products ?? []).map((p: any) => ({
                   productId: p.id,

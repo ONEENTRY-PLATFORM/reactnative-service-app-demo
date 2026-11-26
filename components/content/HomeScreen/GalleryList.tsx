@@ -3,6 +3,7 @@ import {Dimensions, StyleSheet, TouchableOpacity, View} from 'react-native';
 import {useAppSelector} from '@/state/hooks';
 import {router} from 'expo-router';
 import CustomImage from '@/components/shared/CustomImage';
+import {attrFileUrl, attrFiles} from '@/lib/oneentry/attributes';
 
 // Home gallery strip. Mirrors nextjs-beauty GalleryFeed: a 2-column
 // edge-to-edge grid with 4/5 aspect tiles. Web sources 6 shuffled photos
@@ -26,25 +27,17 @@ const GalleryList: React.FC = () => {
   const tiles = useMemo(() => {
     const fromGallery: string[] = (gallery ?? [])
       .flatMap((item: any) => {
-        const arr = item?.attributeValues?.gallery_photos?.value;
-        if (Array.isArray(arr)) {
-          return arr
-            .map((f: any) => f?.downloadLink)
-            .filter(Boolean) as string[];
+        const photos = attrFiles(item?.attributeValues?.gallery_photos);
+        if (photos.length > 0) {
+          return photos.map(f => f.downloadLink).filter(Boolean);
         }
-        const thumb = item?.attributeValues?.gallery_cat_thumb?.value?.[0]
-          ?.downloadLink as string | undefined;
+        const thumb = attrFileUrl(item?.attributeValues?.gallery_cat_thumb);
         return thumb ? [thumb] : [];
       })
       .filter(Boolean);
     if (fromGallery.length >= 6) return fromGallery.slice(0, 6);
     const fromMasters: string[] = (masters ?? [])
-      .map(
-        m =>
-          m?.attributeValues?.master_image?.value?.[0]?.downloadLink as
-            | string
-            | undefined,
-      )
+      .map(m => attrFileUrl(m?.attributeValues?.master_image))
       .filter(Boolean) as string[];
     return [...fromGallery, ...fromMasters].slice(0, 6);
   }, [gallery, masters]);

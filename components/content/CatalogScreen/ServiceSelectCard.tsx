@@ -7,6 +7,7 @@ import Price from '@/components/shared/Price';
 import Select from '@/components/shared/Select';
 import {appColors} from '@/lib/constants/Colors';
 import ServicesGroup from './ServicesGroup.svg';
+import {attrEntries, attrNumber, attrText} from '@/lib/oneentry/attributes';
 import {useAppDispatch, useAppSelector} from '@/state/hooks';
 import {
   deselectMasterForOrder,
@@ -34,12 +35,11 @@ const ServiceSelectCard: React.FC<Props> = ({service}) => {
 
     // Only deselect master if they don't support this service
     if (selectedMaster) {
-      const masterSupportsService =
-        selectedMaster?.attributeValues?.master_services?.value?.some(
-          (masterService: Record<any, any>) => {
-            return service?.localizeInfos?.title === masterService?.title;
-          },
-        );
+      const masterSupportsService = attrEntries<Record<any, any>>(
+        selectedMaster?.attributeValues?.master_services,
+      ).some((masterService: Record<any, any>) => {
+        return service?.localizeInfos?.title === masterService?.title;
+      });
 
       if (!masterSupportsService) {
         dispatch(deselectMasterForOrder());
@@ -49,14 +49,19 @@ const ServiceSelectCard: React.FC<Props> = ({service}) => {
     dispatch(deselectTimeForOrder());
   };
 
-  const type = service.attributeValues?.type?.value[0]?.title;
-  const color = service.attributeValues?.offer_type?.value[0]?.extended?.value;
-  const services = service.attributeValues?.services?.value;
+  const type = attrEntries<Record<any, any>>(service.attributeValues?.type)[0]
+    ?.title;
+  const color = attrEntries<Record<any, any>>(
+    service.attributeValues?.offer_type,
+  )[0]?.extended?.value;
+  const services = attrEntries<Record<any, any>>(
+    service.attributeValues?.services,
+  );
 
   return (
     <CardBase onPress={onSelect}>
       <View className={'flex-row items-center px-4 justify-between w-full'}>
-        {services ? (
+        {services.length > 0 ? (
           <View className={'flex-row items-center gap-x-2.5 w-1/2'}>
             <View
               style={{backgroundColor: color ?? appColors.primary}}
@@ -98,11 +103,11 @@ const ServiceSelectCard: React.FC<Props> = ({service}) => {
               </Paragraph>
             </View>
           )}
-          {services?.length >= 2 && type && (
+          {services.length >= 2 && type && (
             <ServicesGroup
               fill={color}
-              height={services?.length === 2 ? 34 : 50}
-              width={services?.length === 2 ? 14 : 18}
+              height={services.length === 2 ? 34 : 50}
+              width={services.length === 2 ? 14 : 18}
             />
           )}
 
@@ -111,9 +116,9 @@ const ServiceSelectCard: React.FC<Props> = ({service}) => {
               <Price
                 color={color ?? appColors.primary}
                 size={'sm'}
-                price={service?.attributeValues?.price?.value}
-                sale={service?.attributeValues?.sale?.value}
-                currency={service?.attributeValues?.currency?.value}
+                price={attrNumber(service?.attributeValues?.price)}
+                sale={attrNumber(service?.attributeValues?.sale)}
+                currency={attrText(service?.attributeValues?.currency)}
               />
               <Select
                 selected={isSelected}

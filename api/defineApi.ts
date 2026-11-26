@@ -3,6 +3,11 @@ import {createMMKV} from 'react-native-mmkv';
 
 export const storage = createMMKV();
 
+// Marker of the auth provider that issued the current session ('email',
+// 'apple', …). The logout endpoint is per provider, so it has to be sent to
+// the same marker the session was opened with.
+export const AUTH_PROVIDER_KEY = 'auth-provider';
+
 // KEY: OneEntry binds the refresh token to a device-metadata fingerprint.
 // When the SDK is created without a persisted fingerprint it generates a new
 // one on every cold-start, and the server rejects the previously-saved
@@ -32,10 +37,14 @@ const url = process.env.EXPO_PUBLIC_API_URL || '';
 function buildApi(refreshToken?: string, langCode?: string) {
   return defineOneEntry(url, {
     langCode: langCode || 'en_US',
-    token: process.env.EXPO_PUBLIC_API_KEY,
+    token: process.env.EXPO_PUBLIC_API_KEY || '',
     deviceMetadata,
     auth: {
       saveFunction,
+      // SDK ≥ 1.0.183: on `400 Provided token is incorrect` the SDK re-reads the
+      // rotated refresh token through this and retries once. `reDefine` builds
+      // new instances, so an older one can hold a token another already rotated.
+      loadFunction: () => storage.getString('refresh') ?? null,
       refreshToken: refreshToken || undefined,
     },
     errors: {

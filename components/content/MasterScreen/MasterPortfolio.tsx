@@ -6,6 +6,8 @@ import Footer from '@/components/shared/Footer';
 import CardBase from '@/components/shared/CardBase';
 import CustomImage from '@/components/shared/CustomImage';
 import CollectionSliderModal from '@/components/shared/CollectionSliderModal';
+import {attrFiles} from '@/lib/oneentry/attributes';
+import type {IAttributeFile} from 'oneentry/dist/base/utils';
 import { useFocusEffect } from 'expo-router';
 
 const GalleryCategoryItem = ({
@@ -51,34 +53,23 @@ const MasterPortfolio: React.FC<Props> = ({ portfolio }) => {
       return [];
     }
 
-    const result: any[] = [];
-    // Create a deep copy to avoid modifying the original data
-    const items = data.map(item => ({
-      ...item,
-      attributeValues: {
-        ...item.attributeValues,
-        gallery_photos: {
-          ...item.attributeValues.gallery_photos,
-          value: [...item.attributeValues.gallery_photos.value],
-        },
-      },
-    }));
+    const result: IAttributeFile[] = [];
+    // Own copy of every gallery so draining it below leaves the store intact.
+    const galleries = data.map(item =>
+      attrFiles(item?.attributeValues?.gallery_photos),
+    );
 
     let hasMoreImages = true;
 
     while (hasMoreImages) {
       hasMoreImages = false; // Assume no more images to process
 
-      items.forEach(item => {
-        const gallery = item?.attributeValues?.gallery_photos?.value;
-        if (gallery && gallery.length > 0) {
+      galleries.forEach((gallery, index) => {
+        if (gallery.length > 0) {
           hasMoreImages = true; // If there are images, set flag to true
           // Take the first 2 images from the gallery
-          const imagesToAdd = gallery.slice(0, 2);
-          // Add them to the result array
-          result.push(...imagesToAdd);
-          // Update the copied gallery array (immutably)
-          item.attributeValues.gallery_photos.value = gallery.slice(2);
+          result.push(...gallery.slice(0, 2));
+          galleries[index] = gallery.slice(2);
         }
       });
     }

@@ -6,6 +6,7 @@ import Location from '@/assets/icons/Location.svg';
 import X from '@/assets/icons/x.svg';
 import {appColors} from '@/lib/constants/Colors';
 import {IPagesEntity} from 'oneentry/dist/pages/pagesInterfaces';
+import {attrText} from '@/lib/oneentry/attributes';
 import {useAppSelector} from '@/state/hooks';
 
 type Props = {
@@ -35,7 +36,7 @@ const SalonCard = ({
             {salon.localizeInfos?.title}
           </Paragraph>
           <Paragraph color="gray" size={14}>
-            {salon.attributeValues?.salon_address?.value || 'No address'}
+            {attrText(salon.attributeValues?.salon_address) || 'No address'}
           </Paragraph>
         </View>
       </View>

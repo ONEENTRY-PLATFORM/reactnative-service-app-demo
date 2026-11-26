@@ -1,10 +1,16 @@
 import {IUserEntity} from 'oneentry/dist/users/usersInterfaces';
 import {createContext, ReactNode, useContext, useEffect, useRef, useState} from 'react';
 import {useLazyGetMeQuery} from '@/api';
-import {api, initDeviceMetadata, storage} from '@/api/defineApi';
+import {
+  api,
+  AUTH_PROVIDER_KEY,
+  initDeviceMetadata,
+  storage,
+} from '@/api/defineApi';
 import {IAuthEntity, IAuthPostBody} from 'oneentry/dist/auth-provider/authProvidersInterfaces';
 import {IError} from 'oneentry/dist/base/utils';
 import {useNotifications} from '@/lib/notifications';
+import {signOutOfGoogle} from '@/lib/googleOAuth';
 
 export type SignInResult =
   | {ok: true}
@@ -23,7 +29,7 @@ type ContextProps = {
     password: string;
   }) => Promise<SignInResult>;
   authenticate: () => void;
-  logOut: () => void;
+  logOut: () => Promise<void> | void;
   isUserInit?: boolean;
 };
 
@@ -51,7 +57,6 @@ export const AuthProvider = ({children}: Props) => {
   const coldStartFiredRef = useRef(false);
   
   const {token} = useNotifications();
-  const refresh = storage.getString('refresh');
 
   useEffect(() => {
     const refresh = storage.getString('refresh');
@@ -121,6 +126,9 @@ export const AuthProvider = ({children}: Props) => {
         // cheap insurance and mirrors the previous behavior.
         const refreshToken = (res as IAuthEntity).refreshToken;
         if (refreshToken) storage.set('refresh', refreshToken);
+        // Remember which provider issued the session — logout has to be sent
+        // to the same marker, otherwise the API rejects it.
+        storage.set(AUTH_PROVIDER_KEY, method);
         await getUser({});
         return {ok: true};
       }
@@ -149,8 +157,26 @@ export const AuthProvider = ({children}: Props) => {
   };
 
   const logOut = async () => {
+    // The logout endpoint is per provider: a session opened through Apple
+    // cannot be closed on the 'email' marker, the API rejects it.
+    const marker = storage.getString(AUTH_PROVIDER_KEY) || 'email';
+    // Unlink this device first (needs the still-valid session), otherwise the
+    // next person signing in on it would get the previous user's pushes.
+    if (token && isTokenSet) {
+      try {
+        await api.Users.deleteFCMToken(token);
+      } catch {
+        // Best effort — logout must not be blocked by it.
+      }
+    }
+    setIsTokenSet(false);
     try {
-      const result = await api.AuthProvider.logout('email', refresh || '');
+      // Read at call time: the refresh token rotates, a render-time copy is
+      // usually already burned.
+      const result = await api.AuthProvider.logout(
+        marker,
+        storage.getString('refresh') || '',
+      );
       if ((result as IError)?.statusCode >= 400) {
         throw new Error((result as IError)?.message);
       }
@@ -159,7 +185,20 @@ export const AuthProvider = ({children}: Props) => {
     }
 
     storage.remove('refresh');
+    storage.remove(AUTH_PROVIDER_KEY);
+    signOutOfGoogle();
+    // KEY: the SDK clears state.accessToken only on a successful logout
+    // (errors=isShell:false makes it throw before that line). Left behind,
+    // the in-memory token keeps every following request authorized and the
+    // user never actually signs out.
+    api.AuthProvider.setAccessToken('');
+    api.AuthProvider.setRefreshToken('');
     reset();
+    // KEY: the `data` effect above deliberately never clears `user` (RTK
+    // briefly returns undefined while refetching), so reset() alone left the
+    // profile screen showing a signed-in user. Logout is the one place that
+    // has to drop it explicitly.
+    setUser(undefined);
     setIsLoading(false);
   };
 
@@ -219,22 +258,19 @@ export const AuthProvider = ({children}: Props) => {
   const updatePushToken = async () => {
     try {
       const res = await api.Users.addFCMToken(token);
-
-      if ((res as IError)?.statusCode > 400) {
-        throw new Error((res as IError)?.message);
+      if (res !== true) {
+        throw new Error((res as IError)?.message ?? 'addFCMToken failed');
       }
       setIsTokenSet(true);
+      if (__DEV__) console.log('[push] device token registered');
     } catch (e) {
-      console.log('=>(AuthContext.tsx:95) e', e);
+      console.warn('[push] could not register the device token', e);
     }
   };
 
   useEffect(() => {
     if (user && token && !isTokenSet) {
-
-      updatePushToken()
-        .then(res => console.log(res))
-        .catch(e => console.warn(e));
+      updatePushToken();
     }
   }, [user, token, isTokenSet]);
 

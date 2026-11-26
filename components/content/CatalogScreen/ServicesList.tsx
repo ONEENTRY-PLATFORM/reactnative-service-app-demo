@@ -8,6 +8,7 @@ import {useAppSelector} from '@/state/hooks';
 import {getMasterById} from '@/state/reducers/MastersSlice';
 import {IProductsEntity} from 'oneentry/dist/products/productsInterfaces';
 import ServicesByCategoryList from '@/components/content/CatalogScreen/ServicesByCategoryList';
+import {attrEntries} from '@/lib/oneentry/attributes';
 import {ScrollView} from 'react-native';
 import FlexLoader from '@/components/shared/FlexLoader';
 
@@ -30,14 +31,16 @@ const ServicesList: React.FC<Props> = () => {
   const loadData = useCallback(() => {
     try {
       if (master) {
-        const ids = master?.attributeValues?.master_services?.value
-          ?.map((service: any) => {
+        const ids = attrEntries<any>(
+          master?.attributeValues?.master_services,
+        )
+          .map((service: any) => {
             if (typeof service.id === 'string') {
               const serviceId = service?.id?.split('-')[2];
               return parseInt(serviceId);
             }
           })
-          ?.filter((id: number) => id !== undefined);
+          .filter((id: number | undefined) => id !== undefined);
         //get masters products
         getMasterProducts({ids});
       } else {
@@ -89,19 +92,16 @@ const ServicesList: React.FC<Props> = () => {
         if (current?.attributeSetIdentifier === 'service') {
           categories.main.data.push(current);
         } else {
-          if (
-            categories[current?.attributeValues?.offer_type?.value[0]?.value]
-              ?.data
-          ) {
-            categories[
-              current?.attributeValues?.offer_type?.value[0]?.value
-            ].data.push(current);
+          const offerType = attrEntries<Record<any, any>>(
+            current?.attributeValues?.offer_type,
+          )[0];
+          if (categories[offerType?.value]?.data) {
+            categories[offerType?.value].data.push(current);
           } else {
-            categories[current?.attributeValues?.offer_type?.value[0]?.value] =
-              {
-                title: current?.attributeValues?.offer_type?.value[0]?.title,
-                data: [current],
-              };
+            categories[offerType?.value] = {
+              title: offerType?.title,
+              data: [current],
+            };
           }
         }
       });

@@ -23,7 +23,9 @@ const CancelOrderButton: React.FC<Props> = ({orderData, refetch}) => {
   const onCancel = async () => {
     if (!orderData) return;
 
-    const formatedOrderData: IOrderData = {
+    // `statusIdentifier` is accepted by the endpoint but not declared on
+    // IOrderData — see useBookingSubmit.
+    const formatedOrderData: IOrderData & {statusIdentifier: string} = {
       formIdentifier: orderData.formIdentifier ?? '',
       paymentAccountIdentifier: orderData.paymentAccountIdentifier ?? '',
       formData: orderData.formData,

@@ -1,6 +1,7 @@
 import React, {useMemo} from 'react';
 import {FlatList} from 'react-native';
 import MasterInMastersCard from '@/components/content/MastersScreen/MasterInMastersCard';
+import {attrEntries} from '@/lib/oneentry/attributes';
 import {useAppSelector} from '@/state/hooks';
 import {Paragraph} from '@/components/shared/Paragraph';
 
@@ -20,7 +21,9 @@ const MastersList: React.FC<Props> = ({}) => {
   const {qualifiedMasters, services} = useMemo(() => {
     const services: number[] = [];
     let qualifiedMasters = masters.filter(master => {
-      const isService = master?.attributeValues?.master_services?.value?.some(
+      const isService = attrEntries<Record<any, any>>(
+        master?.attributeValues?.master_services,
+      ).some(
         (value: Record<any, any>) => {
           const qualified = service?.localizeInfos?.title === value?.title;
           if (qualified) {
@@ -31,7 +34,9 @@ const MastersList: React.FC<Props> = ({}) => {
       );
 
       if (isService) {
-        return master?.attributeValues?.master_salon?.value.some(
+        return attrEntries<Record<any, any>>(
+          master?.attributeValues?.master_salon,
+        ).some(
           (value: Record<any, any>) => {
             const qualified = value.id === salon?.id;
             return qualified;

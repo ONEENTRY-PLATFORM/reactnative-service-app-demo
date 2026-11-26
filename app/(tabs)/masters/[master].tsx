@@ -8,6 +8,7 @@ import {Paragraph} from '@/components/shared/Paragraph';
 import {ScrollView} from 'react-native';
 import MasterSalonsList from '@/components/content/MasterScreen/MasterSalonsList';
 import MasterPortfolio from '@/components/content/MasterScreen/MasterPortfolio';
+import {attrEntries} from '@/lib/oneentry/attributes';
 
 type Props = {};
 
@@ -20,11 +21,9 @@ const MasterScreen: React.FC<Props> = ({}) => {
 
   const portfolioIds = useMemo(() => {
     // const role = res.role;
-    const prePortfolio = master?.attributeValues?.master_portfolio?.value;
-
-    if (!prePortfolio) {
-      return [];
-    }
+    const prePortfolio = attrEntries<any>(
+      master?.attributeValues?.master_portfolio,
+    );
 
     return prePortfolio.map((v: any) => v.id);
 
@@ -45,8 +44,9 @@ const MasterScreen: React.FC<Props> = ({}) => {
           // CMS rich-text attribute exposes both plainValue and htmlValue. Some
           // records carry only the HTML variant, so fall back to it (tags
           // stripped) — mirrors nextjs-beauty's MasterDescription.
-          const descEntry: any =
-            master?.attributeValues?.master_description?.value?.[0];
+          const descEntry: any = attrEntries<any>(
+            master?.attributeValues?.master_description,
+          )[0];
           const text =
             (descEntry?.plainValue as string | undefined) ||
             (typeof descEntry?.htmlValue === 'string'
@@ -64,7 +64,7 @@ const MasterScreen: React.FC<Props> = ({}) => {
         })()}
 
         <MasterSalonsList
-          salons={master?.attributeValues?.master_salon?.value}
+          salons={attrEntries<any>(master?.attributeValues?.master_salon)}
         />
         {portfolioIds && <MasterPortfolio portfolio={portfolioIds} />}
       </ScrollView>

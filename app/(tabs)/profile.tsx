@@ -2,6 +2,7 @@ import React, {useEffect, useMemo, useState} from 'react';
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
+  Linking,
   Platform,
   Pressable,
   ScrollView,
@@ -11,9 +12,17 @@ import {
   View,
 } from 'react-native';
 import {LinearGradient} from 'expo-linear-gradient';
+import Toast from 'react-native-toast-message';
 import {Redirect, router} from 'expo-router';
-import {LogOut, Mail, Pencil, Phone as PhoneIcon, User} from 'lucide-react-native';
-import type {IAuthFormData} from 'oneentry/dist/auth-provider/authProvidersInterfaces';
+import {
+  ExternalLink,
+  LogOut,
+  Mail,
+  Pencil,
+  Phone as PhoneIcon,
+  User,
+} from 'lucide-react-native';
+import type {FormDataType} from 'oneentry/dist/forms-data/formsDataInterfaces';
 import {useAuth} from '@/state/contexts/AuthContext';
 import {useAppSelector} from '@/state/hooks';
 import {useUpdateMeMutation} from '@/api';
@@ -21,6 +30,9 @@ import {Screen} from '@/components/shared/Screen';
 import {Paragraph} from '@/components/shared/Paragraph';
 import {appColors} from '@/lib/constants/Colors';
 import {useHistoryContext} from '@/state/contexts/HistoryProvider';
+import DeleteAccountButton from '@/components/content/ProfileScreen/DeleteAccountButton';
+
+const POLICY_URL = process.env.EXPO_PUBLIC_POLICY_URL ?? '';
 
 // Mobile profile — mirrors the web ProfileCard layout: a white card with a
 // Profile title + Sign-out button, gradient avatar with the user's name,
@@ -43,7 +55,7 @@ const readField = (user: any, marker: string): string => {
 };
 
 export default function ProfileScreen() {
-  const {user, logOut, isUserInit} = useAuth();
+  const {user, logOut, isUserInit, authenticate} = useAuth();
   const {setLastVisitedTab} = useHistoryContext();
   const dict = useAppSelector(state => state.SystemContentReducer.content) ?? {};
   const [updateMe, {isLoading: saving}] = useUpdateMeMutation();
@@ -87,7 +99,7 @@ export default function ProfileScreen() {
   }
 
   const onSave = async () => {
-    const formData: IAuthFormData[] = [];
+    const formData: FormDataType[] = [];
     if (nameEdit) {
       formData.push({marker: 'name_reg', value: nameEdit, type: 'string'});
     }
@@ -97,10 +109,17 @@ export default function ProfileScreen() {
     if (!user.formIdentifier) return;
     try {
       await updateMe({formIdentifier: user.formIdentifier, formData}).unwrap();
+      // The card reads the profile from AuthContext — refetch /me so the
+      // saved values show at once instead of after the next launch.
+      await authenticate();
       setEditing(false);
-    } catch {
-      // Errors are already surfaced elsewhere; keep the form editable so the
-      // user can retry.
+    } catch (e: any) {
+      // Keep the form editable so the user can retry.
+      Toast.show({
+        type: 'error',
+        text1: 'Could not save the profile',
+        text2: e?.message,
+      });
     }
   };
 
@@ -288,6 +307,20 @@ export default function ProfileScreen() {
               →
             </Paragraph>
           </Pressable>
+
+          {POLICY_URL ? (
+            <Pressable
+              onPress={() => Linking.openURL(POLICY_URL)}
+              accessibilityRole={'link'}
+              style={styles.historyRow}>
+              <Paragraph size={14} weight={'700'} color={'charcoal'}>
+                {(dict.privacy_policy_text as string) || 'Privacy policy'}
+              </Paragraph>
+              <ExternalLink size={14} color={appColors.gray} />
+            </Pressable>
+          ) : null}
+
+          <DeleteAccountButton />
         </ScrollView>
       </KeyboardAvoidingView>
     </Screen>

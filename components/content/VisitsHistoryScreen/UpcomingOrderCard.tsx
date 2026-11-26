@@ -10,6 +10,7 @@ import {IOrderByMarkerEntity} from 'oneentry/dist/orders/ordersInterfaces';
 import {useAppDispatch, useAppSelector} from '@/state/hooks';
 import {getSalonById} from '@/state/reducers/SalonsSlice';
 import {getMasterById} from '@/state/reducers/MastersSlice';
+import {attrFileUrl, attrText} from '@/lib/oneentry/attributes';
 import {router} from 'expo-router';
 import {MasterSalon} from '@/components/content/MasterScreen/MasterSalonsList';
 import Location from '@/assets/icons/Location.svg';
@@ -33,14 +34,12 @@ const UpcomingOrderCard: React.FC<Props> = ({category, item, refetch}) => {
   const {book_again_text} = useAppSelector(
     state => state.SystemContentReducer.content,
   );
-  const salonId = item.formData.find(item => item?.marker === 'order_salon')
-    ?.value[0];
-  const masterId = item.formData.find(item => item?.marker === 'master')
-    ?.value[0];
+  const formValue = (marker: string) =>
+    item?.formData?.find(field => field?.marker === marker)?.value as any[];
+  const salonId = formValue('order_salon')?.[0];
+  const masterId = formValue('master')?.[0];
 
-  const orderDate = dayjs(
-    item?.formData?.find(item => item?.marker === 'interval')?.value[0][0],
-  );
+  const orderDate = dayjs(formValue('interval')?.[0]?.[0]);
 
   // Find salon and master in state by id from formData
   const salon = useAppSelector(state => getSalonById(state, salonId));
@@ -70,19 +69,19 @@ const UpcomingOrderCard: React.FC<Props> = ({category, item, refetch}) => {
       <CardBase
         className={'flex-row gap-x-5'}
         onPress={() => router.push(`/(tabs)/masters/${master?.id}`)}>
-        {master?.attributeValues?.master_image?.value[0]?.downloadLink && (
+        {!!attrFileUrl(master?.attributeValues?.master_image) && (
           <CustomImage
             height={120}
             width={95}
             className={'rounded-md'}
             style={{objectFit: 'cover'}}
-            uri={master?.attributeValues?.master_image?.value[0]?.downloadLink}
+            uri={attrFileUrl(master?.attributeValues?.master_image)}
           />
         )}
         <View className={'flex-1 justify-between py-2'}>
           <View className={'gap-y-1'}>
             <Paragraph color={'dark'} size={18}>
-              {master?.attributeValues?.master_name?.value}
+              {attrText(master?.attributeValues?.master_name)}
             </Paragraph>
             <Rating color={'#0EDEFB'} shorten={false} rating={4.3} />
           </View>
@@ -102,7 +101,7 @@ const UpcomingOrderCard: React.FC<Props> = ({category, item, refetch}) => {
             <View className={'flex-row items-center gap-2'}>
               <Location />
               <Paragraph color={'dark'}>
-                {salon?.attributeValues?.salon_address?.value || 'undefined'}
+                {attrText(salon?.attributeValues?.salon_address) || 'undefined'}
               </Paragraph>
             </View>
           </View>

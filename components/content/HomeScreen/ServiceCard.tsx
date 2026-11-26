@@ -15,16 +15,14 @@ type Props = {
 };
 
 const ServiceCard: React.FC<Props> = ({service}) => {
-  const title = (service?.localizeInfos?.title ?? '') as string;
   return (
     <CardBase
       onPress={() => {
-        router.push({
-          pathname: `/catalog/${service.pageUrl}`,
-          params: {
-            title,
-            uniqueDate: Date.now(),
-          },
+        // Same as the web tile (/services/<pageUrl>): the Services & Prices tab
+        // with this category preselected.
+        router.navigate({
+          pathname: '/(tabs)/services',
+          params: {category: service.pageUrl, ts: String(Date.now())},
         });
       }}>
       <View style={styles.tile}>

@@ -6,6 +6,7 @@ import {useAppDispatch, useAppSelector} from '@/state/hooks';
 import {appColors} from '@/lib/constants/Colors';
 import Arrow from '@/assets/icons/ChevronDownGray.svg';
 import {selectSalonForOrder} from '@/state/reducers/OrderSlice';
+import {attrEntries, attrText} from '@/lib/oneentry/attributes';
 
 type Props = Record<string, never>;
 
@@ -28,22 +29,22 @@ const DropdownElement = ({
     }
 
     let isMasters = masters.some(master => {
-      const isService = master?.attributeValues?.master_services?.value?.some(
-        (value: Record<any, any>) => {
-          const qualified = service?.localizeInfos?.title === value?.title;
-          if (qualified) {
-            return qualified;
-          }
-        },
-      );
+      const isService = attrEntries<Record<any, any>>(
+        master?.attributeValues?.master_services,
+      ).some((value: Record<any, any>) => {
+        const qualified = service?.localizeInfos?.title === value?.title;
+        if (qualified) {
+          return qualified;
+        }
+      });
 
       if (isService) {
-        return master?.attributeValues?.master_salon?.value.some(
-          (value: Record<any, any>) => {
-            const qualified = value.id === id;
-            return qualified;
-          },
-        );
+        return attrEntries<Record<any, any>>(
+          master?.attributeValues?.master_salon,
+        ).some((value: Record<any, any>) => {
+          const qualified = value.id === id;
+          return qualified;
+        });
       }
 
       return isService;
@@ -111,7 +112,8 @@ const SalonPicker: React.FC<Props> = () => {
           <DropdownElement
             title={item.label}
             value={
-              salons[index]?.attributeValues?.salon_address?.value || 'no value'
+              attrText(salons[index]?.attributeValues?.salon_address) ||
+              'no value'
             }
             id={salons[index]?.id}
           />

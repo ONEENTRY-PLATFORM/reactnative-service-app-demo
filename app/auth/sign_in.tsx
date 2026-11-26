@@ -17,6 +17,7 @@ import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {useAuth} from '@/state/contexts/AuthContext';
 import {useAppSelector} from '@/state/hooks';
 import {Paragraph} from '@/components/shared/Paragraph';
+import SocialSignIn from '@/components/auth/SocialSignIn';
 import {appColors} from '@/lib/constants/Colors';
 
 // Mobile sign-in mirrors the web SignInForm design: fuchsia-gradient header
@@ -192,28 +193,7 @@ const SignIn: React.FC = () => {
               </View>
             ) : null}
 
-            {/* Divider */}
-            <View style={styles.dividerRow}>
-              <View style={styles.dividerLine} />
-              <Paragraph size={12} color={'gray'} style={{marginHorizontal: 12}}>
-                {(dict.or_continue_with_text as string) || 'or continue with'}
-              </Paragraph>
-              <View style={styles.dividerLine} />
-            </View>
-
-            {/* Google sign-in — visual only for now (matches web layout).
-                Wire up when the mobile Google auth handler is available. */}
-            <TouchableOpacity activeOpacity={0.85} style={styles.google}>
-              <View style={styles.googleIcon}>
-                <Paragraph size={16} weight={'700'} style={{color: '#4285F4'}}>
-                  G
-                </Paragraph>
-              </View>
-              <Paragraph size={14} weight={'700'} color={'charcoal'}>
-                {(dict.sign_in_with_google_text as string) ||
-                  'Sign in with Google'}
-              </Paragraph>
-            </TouchableOpacity>
+            <SocialSignIn />
 
             {/* Forgot password row */}
             <View style={styles.forgotRow}>
@@ -352,34 +332,6 @@ const styles = StyleSheet.create({
     shadowRadius: 10,
     shadowOffset: {width: 0, height: 4},
     elevation: 2,
-  },
-  dividerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 4,
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: appColors.slate150,
-  },
-  google: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 10,
-    paddingVertical: 12,
-    borderRadius: 999,
-    borderWidth: 1.5,
-    borderColor: appColors.slate150,
-    backgroundColor: appColors.white,
-  },
-  googleIcon: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   forgotRow: {
     flexDirection: 'row',

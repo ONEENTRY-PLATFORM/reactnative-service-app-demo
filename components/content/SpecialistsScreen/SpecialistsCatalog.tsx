@@ -15,6 +15,7 @@ import {useAppSelector} from '@/state/hooks';
 import {useGetChildPagesByUrlQuery} from '@/api';
 import {Paragraph} from '@/components/shared/Paragraph';
 import {appColors} from '@/lib/constants/Colors';
+import {attrFileUrl} from '@/lib/oneentry/attributes';
 import SalonSelector, {
   SalonOption,
 } from '@/components/content/SpecialistsScreen/SalonSelector';
@@ -151,9 +152,7 @@ const SpecialistsCatalog: React.FC = () => {
       'Specialist';
     const role = salonName ? `${shortDescription} · ${salonName}` : shortDescription;
 
-    const photoUrl =
-      (attrs.master_image?.value?.[0]?.downloadLink as string | undefined) ||
-      undefined;
+    const photoUrl = attrFileUrl(attrs.master_image);
 
     const rating = Number(attrs.master_rating?.value) || 5;
 

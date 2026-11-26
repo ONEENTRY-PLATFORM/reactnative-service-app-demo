@@ -6,18 +6,19 @@ Use it as a starting point for booking apps in beauty, wellness, fitness, or any
 
 ## Tech Stack
 
-- **React Native** 0.86 + **Expo SDK** 57
+- **React Native** 0.88 + **Expo SDK** 58
 - **Expo Router** (typed routes)
 - **NativeWind** (Tailwind CSS for React Native)
 - **Redux Toolkit** + React Redux
 - **React Native Reanimated** 4 + Gesture Handler
 - **Firebase Cloud Messaging** for push notifications
+- **Sign in with Apple** and **Google Sign-In** (native) alongside email/password
 - **OneEntry SDK** for CMS integration
 - **TypeScript** throughout
 
 ## Requirements
 
-- Node.js **20+**
+- Node.js **24** (tested with 24.19)
 - Yarn **4.x** (managed via [Corepack](https://yarnpkg.com/corepack) — the repo pins its version via `packageManager`)
 - Xcode 15+ (for iOS builds)
 - Android Studio + JDK 17 (for Android builds)
@@ -60,11 +61,34 @@ If you need push notifications, add your Firebase config files at the project ro
 - `GoogleService-Info.plist` (iOS)
 - `google-services.json` (Android)
 
-These files are `.gitignore`d — get them from your Firebase console.
+These files are `.gitignore`d — get them from your Firebase console. Then point `app.json` at them:
+
+```json
+"ios":     { "googleServicesFile": "./GoogleService-Info.plist" },
+"android": { "googleServicesFile": "./google-services.json" }
+```
+
+To have OneEntry send pushes, upload your Firebase service-account JSON in the OneEntry admin → **Events → Additional settings → Firebase**. The app registers each device's FCM token with OneEntry (`Users.addFCMToken`) after sign-in and removes it on sign-out.
 
 If you don't need push notifications, remove `@react-native-firebase/app`, `@react-native-firebase/messaging`, and `expo-notifications` from `package.json` and `app.json` → `plugins`.
 
-### 4. Generate native projects
+### 4. Social sign-in (optional)
+
+**Sign in with Apple** works on iOS out of the box: enable the *Sign in with Apple* capability for your bundle id and configure an `apple` auth provider in OneEntry (client id = your bundle identifier).
+
+**Google Sign-In** is shown only when these variables are set (e.g. in `.env.local` or EAS environment variables):
+
+```env
+EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID=xxxx.apps.googleusercontent.com
+EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID=yyyy.apps.googleusercontent.com
+EXPO_PUBLIC_GOOGLE_CLIENT_SECRET=web-client-secret
+```
+
+1. In Google Cloud (the project behind your Firebase app) create OAuth clients: **Web**, **iOS** (your bundle id) and **Android** (your package name + the SHA-1 of every signing key, including Play App Signing).
+2. Replace `YOUR_IOS_CLIENT_ID` in `app.json` → `@react-native-google-signin/google-signin` → `iosUrlScheme` with the reversed iOS client id.
+3. In OneEntry configure a `google` auth provider with the **web** client id and secret. The app sends the `serverAuthCode` to OneEntry, which exchanges it for the profile.
+
+### 5. Generate native projects
 
 This is a CNG (Continuous Native Generation) project — the `ios/` and `android/` folders are regenerated from `app.json`:
 
@@ -72,7 +96,7 @@ This is a CNG (Continuous Native Generation) project — the `ios/` and `android
 npx expo prebuild
 ```
 
-### 5. Run
+### 6. Run
 
 ```bash
 # iOS
@@ -95,7 +119,6 @@ state/                  Redux slices + contexts
 lib/                    Helpers, hooks, notifications
 types/                  TypeScript declarations
 assets/                 Images, fonts, icons
-patches/                patch-package patches for third-party libs
 plugins/                Custom Expo config plugins
 scripts/                Build-time scripts
 docs/                   Integration notes (Authorization, Orders)

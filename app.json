@@ -6,10 +6,14 @@
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "myapp",
-    "userInterfaceStyle": "automatic",
+    "userInterfaceStyle": "light",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.example.beautyservice"
+      "bundleIdentifier": "com.example.beautyservice",
+      "usesAppleSignIn": true,
+      "config": {
+        "usesNonExemptEncryption": false
+      }
     },
     "android": {
       "versionCode": 1,
@@ -17,11 +21,16 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/icon.png",
         "backgroundColor": "#FFFFFF"
-      }
+      },
+      "blockedPermissions": [
+        "android.permission.SYSTEM_ALERT_WINDOW",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE"
+      ]
     },
     "web": {
       "bundler": "metro",
-      "output": "static",
+      "output": "single",
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
@@ -31,8 +40,8 @@
       [
         "expo-notifications",
         {
-          "icon": "./assets/images/icon.png",
-          "color": "#ffffff",
+          "icon": "./assets/images/notification-icon.png",
+          "color": "#ED21F1",
           "defaultChannel": "default"
         }
       ],
@@ -40,11 +49,16 @@
         "expo-build-properties",
         {
           "ios": {
-            "useFrameworks": "static",
+            "useFrameworks": "dynamic",
             "deploymentTarget": "16.4"
+          },
+          "android": {
+            "enableMinifyInReleaseBuilds": false,
+            "enableShrinkResourcesInReleaseBuilds": false
           }
         }
       ],
+      "expo-apple-authentication",
       "expo-font",
       "./plugins",
       "expo-image",
@@ -53,11 +67,18 @@
         {
           "image": "./assets/images/splash-icon.png",
           "resizeMode": "cover",
-          "backgroundColor": "#000000"
+          "backgroundColor": "#000000",
+          "enableFullScreenImage_legacy": true
         }
       ],
       "expo-status-bar",
-      "expo-web-browser"
+      "expo-web-browser",
+      [
+        "@react-native-google-signin/google-signin",
+        {
+          "iosUrlScheme": "com.googleusercontent.apps.YOUR_IOS_CLIENT_ID"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

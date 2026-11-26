@@ -1,5 +1,6 @@
 import React, { Dispatch, useRef } from 'react';
-import { TextInput, View } from 'react-native';
+import {View} from 'react-native';
+import type {TextInputInstance} from 'react-native';
 import CustomInput from '@/components/shared/CustomInput';
 import PasswordInput from '@/components/shared/PasswordInput';
 import { Paragraph } from '@/components/shared/Paragraph';
@@ -16,7 +17,7 @@ const SignInForm: React.FC<Props> = ({ login, setLogin, setPass, pass }) => {
   const { sign_in_text } = useAppSelector(
     state => state.SystemContentReducer.content,
   );
-  const passRef = useRef<TextInput>(null);
+  const passRef = useRef<TextInputInstance>(null);
 
   return (
     <View className={'gap-y-5'}>

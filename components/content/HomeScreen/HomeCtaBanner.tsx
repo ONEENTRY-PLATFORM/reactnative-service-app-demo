@@ -3,6 +3,7 @@ import {LinearGradient} from 'expo-linear-gradient';
 import {router} from 'expo-router';
 import {Paragraph} from '@/components/shared/Paragraph';
 import {appColors} from '@/lib/constants/Colors';
+import {attrFileUrl} from '@/lib/oneentry/attributes';
 import type {IPositionBlock} from 'oneentry/dist/pages/pagesInterfaces';
 
 // Booking CTA banner, mirroring nextjs-beauty's HomeCtaBanner. The web
@@ -16,8 +17,7 @@ type Props = {
 const HomeCtaBanner = ({block}: Props) => {
   const attrs = (block?.attributeValues ?? {}) as Record<string, any>;
   const bg =
-    attrs.bg_image_mobile?.value?.[0]?.downloadLink ??
-    attrs.bg_image?.value?.[0]?.downloadLink;
+    attrFileUrl(attrs.bg_image_mobile) ?? attrFileUrl(attrs.bg_image);
   const title = attrs.title?.value ?? 'Ready to visit?';
   const description =
     attrs.description?.value ??

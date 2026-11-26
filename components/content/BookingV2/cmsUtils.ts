@@ -138,9 +138,16 @@ type FileEntry = {
   defaultPreview?: string;
 };
 
+// `value` is what an image/file attribute carries: since SDK 1.0.157 a single
+// file arrives as the object itself, several stay an array.
+const firstFile = (value: unknown): FileEntry | undefined => {
+  if (Array.isArray(value)) return value[0] as FileEntry | undefined;
+  return value && typeof value === 'object' ? (value as FileEntry) : undefined;
+};
+
 export const fileDisplayUrl = (value: unknown): string => {
-  if (!Array.isArray(value) || value.length === 0) return '';
-  const first = value[0] as FileEntry;
+  const first = firstFile(value);
+  if (!first) return '';
   const link = first?.downloadLink ?? first?.previewLink;
   if (!link) return '';
   if (typeof link === 'string') return link;
@@ -148,8 +155,8 @@ export const fileDisplayUrl = (value: unknown): string => {
 };
 
 export const fileBlurDataUrl = (value: unknown): string | undefined => {
-  if (!Array.isArray(value) || value.length === 0) return undefined;
-  const first = value[0] as FileEntry;
+  const first = firstFile(value);
+  if (!first) return undefined;
   const preview = first?.previewLink;
   if (typeof preview !== 'object' || !preview) return undefined;
   const key = first.defaultPreview ?? 'default';

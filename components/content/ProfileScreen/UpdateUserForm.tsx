@@ -1,6 +1,7 @@
 import React, {Dispatch, memo, useEffect, useRef, useState} from 'react';
-import {Alert, TextInput, View} from 'react-native';
-import {IAuthFormData} from 'oneentry/dist/auth-provider/authProvidersInterfaces';
+import {Alert, View} from 'react-native';
+import type {TextInputInstance} from 'react-native';
+import {FormDataType} from 'oneentry/dist/forms-data/formsDataInterfaces';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-controller';
 import {useAuth} from '@/state/contexts/AuthContext';
 import {useAppSelector} from '@/state/hooks';
@@ -18,14 +19,14 @@ const UpdateUserForm: React.FC<Props> = ({}) => {
   const [nameValue, setNameValue] = useState<string>('');
   const [phoneValue, setPhoneValue] = useState<string>('');
   const {user, logOut} = useAuth();
-  const usernameRef = useRef<TextInput>(null);
-  const phoneRef = useRef<TextInput>(null);
+  const usernameRef = useRef<TextInputInstance>(null);
+  const phoneRef = useRef<TextInputInstance>(null);
   const [updateMe, {isLoading}] = useUpdateMeMutation();
 
   const onUpdateUserData = async () => {
     try {
       //Transform data to IAuthFormData
-      const formData: IAuthFormData[] = [];
+      const formData: FormDataType[] = [];
 
       if (nameValue) {
         formData.push({

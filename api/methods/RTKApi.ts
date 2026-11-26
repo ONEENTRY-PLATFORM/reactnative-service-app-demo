@@ -17,10 +17,7 @@ import {
   IBlockEntity,
   IBlockSlidesResponse,
 } from 'oneentry/dist/blocks/blocksInterfaces';
-import {
-  IAuthFormData,
-  IAuthProvidersEntity,
-} from 'oneentry/dist/auth-provider/authProvidersInterfaces';
+import {IAuthProvidersEntity} from 'oneentry/dist/auth-provider/authProvidersInterfaces';
 import {IUserEntity} from 'oneentry/dist/users/usersInterfaces';
 import {IFormsEntity} from 'oneentry/dist/forms/formsInterfaces';
 import {
@@ -32,8 +29,9 @@ import {
   IOrderByMarkerEntity,
   IOrdersByMarkerEntity,
 } from 'oneentry/dist/orders/ordersInterfaces';
-import {IAttributeSetsEntity} from 'oneentry/dist/attribute-sets/attributeSetsInterfaces';
+import {IAttributesSetsEntity} from 'oneentry/dist/attribute-sets/attributeSetsInterfaces';
 import {
+  FormDataType,
   IBodyPostFormData,
   IPostFormResponse,
 } from 'oneentry/dist/forms-data/formsDataInterfaces';
@@ -203,7 +201,9 @@ export const RTKApi = createApi({
 
     updateMe: builder.mutation<
       boolean,
-      {formIdentifier: string; formData: IAuthFormData[]}
+      // SDK ≥ 1.0.168 types `updateUser` form data by field type (`FormDataType`),
+      // not the auth-only `IAuthFormData`.
+      {formIdentifier: string; formData: FormDataType[]}
     >({
       queryFn: async ({formData, formIdentifier}) => {
         try {
@@ -398,7 +398,7 @@ export const RTKApi = createApi({
     }),
 
     getAttributesByMarker: builder.query<
-      IAttributeSetsEntity[],
+      IAttributesSetsEntity[],
       {setMarker: string; langCode?: string}
     >({
       queryFn: async ({setMarker}) => {
@@ -409,7 +409,7 @@ export const RTKApi = createApi({
           if ((result as IError)?.statusCode >= 400) {
             throw new Error((result as IError)?.message);
           }
-          return {data: (result as IAttributeSetsEntity[]) || {}};
+          return {data: (result as IAttributesSetsEntity[]) || {}};
         } catch (e: any) {
           return {error: e.message};
         }
@@ -518,10 +518,8 @@ export const RTKApi = createApi({
           if ((result as IError)?.statusCode >= 400) {
             throw new Error((result as IError)?.message);
           }
-          const sessions = Array.isArray(result)
-            ? (result as ISessionEntity[])
-            : [result as ISessionEntity];
-          return {data: sessions};
+          // SDK ≥ 1.0.17x: always an array (`[]` for an order without sessions).
+          return {data: result as ISessionEntity[]};
         } catch (e: any) {
           return {error: e.message};
         }

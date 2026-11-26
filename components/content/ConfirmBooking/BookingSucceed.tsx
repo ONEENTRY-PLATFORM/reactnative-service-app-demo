@@ -10,19 +10,29 @@ import Rating from '@/components/shared/Rating';
 import Reviews from '@/assets/icons/Reviews.svg';
 import {useAppSelector} from '@/state/hooks';
 import {getMasterById} from '@/state/reducers/MastersSlice';
+import {attrFileUrl, attrNumber, attrText} from '@/lib/oneentry/attributes';
 import {IOrdersFormData} from 'oneentry/dist/orders/ordersInterfaces';
 import {useLazyGetOrderByIDQuery} from '@/api';
 import dayjs from 'dayjs';
+import {useMasterReviews} from '@/lib/oneentry/reviews';
 
 const BookingSucceed: React.FC = () => {
   const params = useLocalSearchParams();
   const [getOrder, {data, reset, isLoading}] = useLazyGetOrderByIDQuery();
-  let masterId = Number(
-    (data?.formData as IOrdersFormData[] | undefined)?.find(
-      attr => attr.marker === 'master',
-    )?.value?.[0],
-  );
+  const masterField = (data?.formData as IOrdersFormData[] | undefined)?.find(
+    attr => attr.marker === 'master',
+  )?.value as unknown[] | undefined;
+  let masterId = Number(masterField?.[0]);
   const master = useAppSelector(state => getMasterById(state, masterId));
+  const {reviews: masterReviews, loading: reviewsLoading} = useMasterReviews(
+    master?.id,
+  );
+  // `interval` form field holds [[start, end]] — the booking's start moment.
+  const intervalStart = (
+    (data?.formData as IOrdersFormData[] | undefined)?.find(
+      a => a.marker === 'interval',
+    )?.value as unknown[][] | undefined
+  )?.[0]?.[0] as string | undefined;
 
   useEffect(() => {
     // Reset previous data immediately when params.id changes
@@ -56,32 +66,36 @@ const BookingSucceed: React.FC = () => {
           width={136}
           className={'rounded-lg'}
           style={{objectFit: 'cover'}}
-          uri={master?.attributeValues?.master_image?.value[0]?.downloadLink}
+          uri={attrFileUrl(master?.attributeValues?.master_image)}
         />
         <View className={'flex-1 justify-between'}>
           <View className={'gap-y-2'}>
             <Paragraph color={'dark'} size={18}>
-              {master?.attributeValues?.master_name?.value}
+              {attrText(master?.attributeValues?.master_name)}
             </Paragraph>
             <Paragraph color={'dark'} size={12}>
               <Paragraph color={'primary'} size={12}>
-                {master?.attributeValues?.master_expirience?.value}
+                {attrText(master?.attributeValues?.master_expirience)}
               </Paragraph>
             </Paragraph>
             <View className={'flex-row items-center gap-3'}>
-              {master?.attributeValues?.master_rating?.value && (
+              {!!attrNumber(master?.attributeValues?.master_rating) && (
                 <Rating
                   color={'#0EDEFB'}
                   shorten={false}
-                  rating={Number(master?.attributeValues?.master_rating?.value)}
+                  rating={attrNumber(master?.attributeValues?.master_rating) ?? 0}
                 />
               )}
-              <Link href={`/(tabs)/masters/reviews?master=${params.master}`}>
+              {/* This route only carries the order id, so the master comes
+                  from the order's `master` field, not from params. */}
+              <Link href={`/(tabs)/masters/reviews?master=${master?.id ?? ''}`}>
                 <View className={'flex-row items-center gap-2'}>
                   <Reviews />
-                  <Paragraph color={'dark'} size={18} weight={'400'}>
-                    1
-                  </Paragraph>
+                  {!reviewsLoading && (
+                    <Paragraph color={'dark'} size={18} weight={'400'}>
+                      {masterReviews.length}
+                    </Paragraph>
+                  )}
                 </View>
               </Link>
             </View>
@@ -94,16 +108,10 @@ const BookingSucceed: React.FC = () => {
                 size={16}
                 color={'dark'}
                 style={{textDecorationLine: 'underline'}}>
-                {dayjs(
-                  data?.formData?.find(a => a.marker === 'interval')
-                    ?.value[0][0],
-                ).format('DD.MM.YYYY')}
+                {dayjs(intervalStart).format('DD.MM.YYYY')}
               </Paragraph>
               <Paragraph size={16} color={'primary'} weight={'400'}>
-                {dayjs(
-                  data?.formData?.find(a => a.marker === 'interval')
-                    ?.value[0][0],
-                ).format('HH:mm')}
+                {dayjs(intervalStart).format('HH:mm')}
               </Paragraph>
             </View>
           </View>

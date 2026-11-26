@@ -1,11 +1,22 @@
 import {Tabs} from 'expo-router';
-import {Platform, StyleSheet} from 'react-native';
+import {StyleSheet} from 'react-native';
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {useGetMenuQuery} from '@/api';
 import {IMenusPages} from 'oneentry/dist/menus/menusInterfaces';
 import {appColors} from '@/lib/constants/Colors';
 import CustomHeader from '@/components/shared/CustomHeader';
 import TabBarIcon from '@/components/shared/TabBarIcon';
 import {useHistoryContext} from '@/state/contexts/HistoryProvider';
+
+// Utility routes stay real tabs with their button hidden. Since expo-router 58
+// `href: null` marks a tab `hidden`, and focusing a hidden tab immediately
+// redirects to the initial tab — so profile/booking/visits became unreachable.
+const HIDDEN_TAB = {tabBarItemStyle: {display: 'none'}} as const;
+
+// Bar height above the system inset: 6 top + ~45 icon/label + 4 bottom. The
+// old fixed 64/86 bars only looked right because the label ran into the
+// gesture bar / home indicator.
+const TAB_BAR_CONTENT_HEIGHT = 56;
 
 // Tab layout is driven by the CMS 'main' menu — the same source web uses.
 // The menu items in this project don't carry icon attributes, so we don't try
@@ -14,6 +25,16 @@ import {useHistoryContext} from '@/state/contexts/HistoryProvider';
 export default function TabLayout() {
   const {data: menuData, error, isLoading} = useGetMenuQuery({marker: 'main'});
   const {setLastVisitedTab} = useHistoryContext();
+  // Android draws edge-to-edge, so the gesture bar sits on top of the app: a
+  // fixed-height bar put its labels under it. Grow the bar by the real inset.
+  const insets = useSafeAreaInsets();
+  const tabBarStyle = [
+    styles.tabBar,
+    {
+      height: TAB_BAR_CONTENT_HEIGHT + insets.bottom,
+      paddingBottom: 4 + insets.bottom,
+    },
+  ];
 
   if (isLoading) return null;
 
@@ -31,8 +52,8 @@ export default function TabLayout() {
         tabBarLabelStyle: styles.tabLabel,
         header: props => <CustomHeader {...props} />,
         sceneStyle: {backgroundColor: appColors.white},
-        tabBarStyle: styles.tabBar,
-        tabBarItemStyle: {paddingVertical: 4},
+        tabBarStyle,
+        tabBarItemStyle: {paddingVertical: 2},
       }}>
       {(menuData?.pages as IMenusPages[] | undefined)
         ?.filter((page): page is IMenusPages & {pageUrl: string} =>
@@ -60,44 +81,40 @@ export default function TabLayout() {
       {/* Utility routes — reachable via router.navigate, never shown as tabs. */}
       <Tabs.Screen
         name={'catalog/[marker]'}
-        options={{href: null, title: 'Catalog'}}
+        options={{...HIDDEN_TAB, title: 'Catalog'}}
       />
       <Tabs.Screen
         name={'masters/[master]'}
-        options={{href: null, title: 'Master'}}
+        options={{...HIDDEN_TAB, title: 'Master'}}
       />
       <Tabs.Screen
         name={'masters/reviews'}
-        options={{href: null, title: 'Reviews'}}
+        options={{...HIDDEN_TAB, title: 'Reviews'}}
       />
       <Tabs.Screen
         name={'gallery/[marker]'}
-        options={{href: null, title: 'Gallery item'}}
+        options={{...HIDDEN_TAB, title: 'Gallery item'}}
       />
       <Tabs.Screen
         name={'order_processing'}
-        options={{href: null, title: 'Deposit payment'}}
+        options={{...HIDDEN_TAB, title: 'Deposit payment'}}
         listeners={{focus: () => setLastVisitedTab('order_processing')}}
       />
       <Tabs.Screen
         name={'confirm_booking'}
-        options={{href: null, title: 'Confirm booking'}}
-      />
-      <Tabs.Screen
-        name={'stripe_payment'}
-        options={{href: null, title: 'Confirm booking'}}
+        options={{...HIDDEN_TAB, title: 'Confirm booking'}}
       />
       <Tabs.Screen
         name={'booking'}
-        options={{href: null, title: 'Booking'}}
+        options={{...HIDDEN_TAB, title: 'Booking'}}
       />
       <Tabs.Screen
         name={'profile'}
-        options={{href: null, title: 'Profile'}}
+        options={{...HIDDEN_TAB, title: 'Profile'}}
       />
       <Tabs.Screen
         name={'visits_history'}
-        options={{href: null, title: 'Visits history'}}
+        options={{...HIDDEN_TAB, title: 'Visits history'}}
       />
     </Tabs>
   );
@@ -109,8 +126,6 @@ const styles = StyleSheet.create({
     borderTopColor: appColors.slate150,
     borderTopWidth: StyleSheet.hairlineWidth,
     paddingTop: 6,
-    paddingBottom: Platform.OS === 'ios' ? 6 : 4,
-    height: Platform.OS === 'ios' ? 86 : 64,
   },
   tabLabel: {
     fontFamily: 'Lato_700Bold',

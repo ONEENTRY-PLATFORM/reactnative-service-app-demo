@@ -3,6 +3,7 @@ import {
   Dimensions,
   Modal,
   ScrollView,
+  type ScrollViewInstance,
   StatusBar,
   StyleSheet,
   TouchableOpacity,
@@ -53,7 +54,7 @@ const GalleryLightbox: React.FC<Props> = ({
 }) => {
   const insets = useSafeAreaInsets();
   const carouselRef = useRef<CarouselRef | null>(null);
-  const thumbsRef = useRef<ScrollView | null>(null);
+  const thumbsRef = useRef<ScrollViewInstance | null>(null);
   const [index, setIndex] = useState(defaultIndex);
 
   useEffect(() => {

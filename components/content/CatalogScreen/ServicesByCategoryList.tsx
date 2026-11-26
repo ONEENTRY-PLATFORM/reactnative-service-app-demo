@@ -3,6 +3,7 @@ import ServiceSelectCard from '@/components/content/CatalogScreen/ServiceSelectC
 import {FlatList, StyleSheet, View} from 'react-native';
 import {IProductsEntity} from 'oneentry/dist/products/productsInterfaces';
 import {appColors} from '@/lib/constants/Colors';
+import {attrEntries} from '@/lib/oneentry/attributes';
 import {Paragraph} from '@/components/shared/Paragraph';
 
 type Props = {
@@ -14,8 +15,9 @@ type Props = {
 
 const ServicesByCategoryList: React.FC<Props> = ({categoryObj}) => {
   const category = categoryObj.data;
-  const borderColor =
-    category[0]?.attributeValues?.offer_type?.value[0]?.extended?.value;
+  const borderColor = attrEntries<Record<any, any>>(
+    category[0]?.attributeValues?.offer_type,
+  )[0]?.extended?.value;
 
   return (
     <View

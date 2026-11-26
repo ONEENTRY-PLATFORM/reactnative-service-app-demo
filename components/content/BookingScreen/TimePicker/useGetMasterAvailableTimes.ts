@@ -1,5 +1,6 @@
 import {useMemo} from 'react';
 import {useAppSelector} from '@/state/hooks';
+import {attrEntries} from '@/lib/oneentry/attributes';
 import dayjs from 'dayjs';
 
 /**
@@ -40,8 +41,9 @@ const useGetMasterAvailableTimes = ({
       return {times: allTimes};
     }
 
-    const intervals =
-      selectedMaster?.attributeValues?.master_schedule?.value[0]?.values;
+    const intervals = attrEntries<any>(
+      selectedMaster?.attributeValues?.master_schedule,
+    )[0]?.values;
 
     if (!intervals?.length) {
       return {times: allTimes};

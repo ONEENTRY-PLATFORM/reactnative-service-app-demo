@@ -1,5 +1,6 @@
 import React from 'react';
 import CustomImage from '@/components/shared/CustomImage';
+import {attrFileUrl, attrNumber, attrText} from '@/lib/oneentry/attributes';
 import CardBase from '@/components/shared/CardBase';
 import {View} from 'react-native';
 import {useAppSelector} from '@/state/hooks';
@@ -32,17 +33,17 @@ const OrderReviewCard: React.FC<Props> = ({}) => {
         width={114}
         className={'rounded-lg'}
         style={{objectFit: 'cover'}}
-        uri={master?.attributeValues?.master_image?.value[0]?.downloadLink}
+        uri={attrFileUrl(master?.attributeValues?.master_image)}
       />
       <View className={'flex-1 justify-between py-2'}>
         <View className={'gap-y-1'}>
           <Paragraph color={'dark'} size={18}>
-            {master?.attributeValues?.master_name?.value}
+            {attrText(master?.attributeValues?.master_name)}
           </Paragraph>
           <Rating
             color={'#0EDEFB'}
             shorten={false}
-            rating={master?.attributeValues?.master_rating?.value}
+            rating={attrNumber(master?.attributeValues?.master_rating) ?? 0}
           />
         </View>
         <View className={'py-2.5'}>
@@ -50,7 +51,7 @@ const OrderReviewCard: React.FC<Props> = ({}) => {
             {salon?.localizeInfos?.title?.toUpperCase()}
           </Paragraph>
           <Paragraph size={13}>
-            {salon?.attributeValues?.salon_address?.value}
+            {attrText(salon?.attributeValues?.salon_address)}
           </Paragraph>
         </View>
         <View className={'w-full h-0.5 my-2 bg-gray'} />

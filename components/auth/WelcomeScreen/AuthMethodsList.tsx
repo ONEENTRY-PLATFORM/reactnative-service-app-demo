@@ -5,6 +5,7 @@ import CustomButton from '@/components/shared/CustomButton';
 import CreateAccountButton from '@/components/shared/CreateAccountButton';
 import EmptyState from '@/components/shared/EmptyState';
 import GoogleSignInButton from '@/components/auth/WelcomeScreen/GoogleSignInButton';
+import AppleSignInButton from '@/components/auth/WelcomeScreen/AppleSignInButton';
 import {router} from 'expo-router';
 import {useAppSelector} from '@/state/hooks';
 import Email from '@/assets/icons/Email.svg';
@@ -57,6 +58,11 @@ const AuthMethodsList: React.FC<Props> = ({}) => {
               title={label}
             />
           );
+        }
+        // Apple renders its own system-styled button; it is iOS-only and
+        // returns null elsewhere.
+        if (method?.identifier === 'apple') {
+          return <AppleSignInButton key={method?.identifier + index} />;
         }
         return (
           <CustomButton

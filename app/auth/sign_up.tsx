@@ -2,6 +2,7 @@ import React, {useEffect, useState} from 'react';
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
+  Linking,
   Platform,
   Pressable,
   ScrollView,
@@ -20,6 +21,9 @@ import {useAuth} from '@/state/contexts/AuthContext';
 import {useAppSelector} from '@/state/hooks';
 import {Paragraph} from '@/components/shared/Paragraph';
 import {appColors} from '@/lib/constants/Colors';
+import SocialSignIn from '@/components/auth/SocialSignIn';
+
+const POLICY_URL = process.env.EXPO_PUBLIC_POLICY_URL ?? '';
 
 // Mobile sign-up mirrors the sign_in visual language: fuchsia-gradient header
 // with close X, full-width underline fields, big pink CTA, "Already have an
@@ -256,6 +260,22 @@ const SignUp: React.FC = () => {
                 </Paragraph>
               )}
             </TouchableOpacity>
+
+            {POLICY_URL ? (
+              <Paragraph size={12} color={'gray'} style={{textAlign: 'center'}}>
+                {'By creating an account you agree to our '}
+                <Paragraph
+                  size={12}
+                  color={'primary'}
+                  weight={'700'}
+                  onPress={() => Linking.openURL(POLICY_URL)}
+                  style={{textDecorationLine: 'underline'}}>
+                  {(dict.privacy_policy_text as string) || 'Privacy policy'}
+                </Paragraph>
+              </Paragraph>
+            ) : null}
+
+            <SocialSignIn />
 
             <View style={styles.bottomRow}>
               <Paragraph size={13} color={'gray'}>

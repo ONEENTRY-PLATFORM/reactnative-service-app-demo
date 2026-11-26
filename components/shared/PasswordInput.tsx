@@ -3,7 +3,7 @@ import Eye from '@/assets/icons/PasswordVisible.svg';
 import ClosedEye from '@/assets/icons/PasswordInvisible.svg';
 import CustomInput from '@/components/shared/CustomInput';
 import {useAppSelector} from '@/state/hooks';
-import {TextInput} from 'react-native';
+import type {TextInputInstance} from 'react-native';
 
 type Props = {
   validators?: Record<string, any>;
@@ -13,10 +13,10 @@ type Props = {
   setRepeatPassword?: Dispatch<string>;
 };
 
-const PasswordInput = forwardRef<TextInput, Props>(
+const PasswordInput = forwardRef<TextInputInstance, Props>(
   ({validators, value, setValue, repeatPassword, setRepeatPassword}, ref) => {
     const [visible, setVisible] = useState<boolean>(false);
-    const passwordInputRef = useRef<TextInput>(null);
+    const passwordInputRef = useRef<TextInputInstance>(null);
 
     const {password_input_title_text, reset_password_text} = useAppSelector(
       state => state.SystemContentReducer.content,

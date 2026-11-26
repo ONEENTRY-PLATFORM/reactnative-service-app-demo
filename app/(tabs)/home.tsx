@@ -23,7 +23,7 @@ import {useAppSelector} from '@/state/hooks';
 //   4. OffersFeed      — home_offers_feed — "Best Offers" title
 //   5. HomeCtaBanner   — home_discounts   — booking CTA banner
 //   6. MastersFeed     — home_masters     — "Our Specialists" title
-//   7. ReviewsCarousel — mock             — "Reviews" title
+//   7. ReviewsCarousel — master_review form — "Reviews" title
 // SalonPicker was removed from home (it doesn't exist on web home).
 export default function HomeScreen() {
   const {
@@ -110,11 +110,9 @@ export default function HomeScreen() {
               <MastersList />
             </View>
 
-            {/* 7. Reviews */}
-            <View style={{gap: 16}}>
-              <SectionTitle title={dict?.home_reviews_title ?? 'Reviews'} />
-              <ReviewsCarousel />
-            </View>
+            {/* 7. Reviews — renders its own title, and nothing at all when
+                there are no approved reviews. */}
+            <ReviewsCarousel title={dict?.home_reviews_title ?? 'Reviews'} />
 
             <Footer height={40} />
           </View>

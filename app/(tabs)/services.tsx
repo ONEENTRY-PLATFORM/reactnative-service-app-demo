@@ -8,6 +8,7 @@ import {
   View,
 } from 'react-native';
 import {LinearGradient} from 'expo-linear-gradient';
+import {useLocalSearchParams} from 'expo-router';
 import {Search, X} from 'lucide-react-native';
 import {IPagesEntity} from 'oneentry/dist/pages/pagesInterfaces';
 import {Screen} from '@/components/shared/Screen';
@@ -79,6 +80,22 @@ export default function ServicesScreen() {
   const [activeSubUrl, setActiveSubUrl] = useState<string | null>(null);
   const [selectedSalonUrl, setSelectedSalonUrl] = useState<string | null>(null);
   const [query, setQuery] = useState('');
+
+  // A home category tile opens this tab with `?category=<pageUrl>` (web:
+  // /services/<pageUrl>). `ts` makes a repeat tap on the same tile re-apply it
+  // after the user switched pills. Adjusted during render, not in an effect.
+  const {category: categoryParam, ts: categoryTs} = useLocalSearchParams<{
+    category?: string;
+    ts?: string;
+  }>();
+  const paramKey = categoryParam ? `${categoryParam}:${categoryTs ?? ''}` : null;
+  const [appliedParamKey, setAppliedParamKey] = useState<string | null>(null);
+  if (paramKey && paramKey !== appliedParamKey) {
+    setAppliedParamKey(paramKey);
+    setActiveCatUrl(categoryParam ?? null);
+    setActiveSubUrl(null);
+    setQuery('');
+  }
 
   const currentCatUrl =
     activeCatUrl && categories.some(c => c.pageUrl === activeCatUrl)

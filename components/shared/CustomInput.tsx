@@ -5,6 +5,7 @@ import {
   View,
   StyleSheet,
   TextInputProps,
+  type TextInputInstance,
 } from 'react-native';
 import {Paragraph, ParagraphProps} from '@/components/shared/Paragraph';
 import {appColors} from '@/lib/constants/Colors';
@@ -38,7 +39,7 @@ type Props = {
   Icon?: ReactNode;
   errorMessage?: string;
   type?: 'normal' | 'compact';
-  ref?: RefObject<TextInput | null>;
+  ref?: RefObject<TextInputInstance | null>;
   width?: number;
 } & TextInputProps;
 

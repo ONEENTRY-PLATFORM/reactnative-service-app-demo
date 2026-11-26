@@ -4,6 +4,7 @@ import {
   Keyboard,
   Pressable,
   TextInput,
+  type TextInputInstance,
   TouchableOpacity,
   View,
 } from 'react-native';
@@ -24,7 +25,7 @@ const OTPInput: React.FC<Props> = ({value, setValue}) => {
   const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
   const [timeLeft, setTimeLeft] = useState<number>(0);
   const params = useLocalSearchParams();
-  const ref = useRef<TextInput>(null);
+  const ref = useRef<TextInputInstance>(null);
   const [generateOTP, {error, data}] = useGenerateOTPMutation();
   const {enter_otp_code, receive_otp_text, resend_text} = useAppSelector(
     state => state.SystemContentReducer.content,
